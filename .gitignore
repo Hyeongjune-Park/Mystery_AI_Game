@@ -1,0 +1,10 @@
+# Node/Next
+node_modules/
+pnpm-lock.yaml
+.next/
+dist/
+coverage/
+.turbo/
+# env
+.env
+.env.*

@@ -1,0 +1,4 @@
+- dev all    : pnpm dev:all
+- install    : pnpm install
+- lint fix   : pnpm eslint . --ext .ts,.tsx --fix
+- fmt all    : pnpm prettier --write .

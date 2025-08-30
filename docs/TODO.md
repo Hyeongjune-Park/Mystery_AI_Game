@@ -1,0 +1,5 @@
+- [ ] web: 메시지 pending/에러 상태 UI
+- [ ] api: DTO class-validator 추가
+- [ ] api: Nest 포트 .env로 분리 (PORT=3001)
+- [ ] web: Next Route Handler로 /api 프록시 (CORS 제거)
+- [ ] db: Prisma 도입 (Session/Message 저장)

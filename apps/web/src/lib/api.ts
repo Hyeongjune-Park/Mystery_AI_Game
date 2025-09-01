@@ -1,27 +1,34 @@
-// apps/web/src/lib/api.ts
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
-if (!BASE) {
-  // 빌드/런타임에 BASE 없을 때 디버깅용
-  // eslint-disable-next-line no-console
-  console.warn('NEXT_PUBLIC_API_BASE_URL is not set');
+// 프런트에서 직접 메시지만 전송 (세션ID는 클라이언트가 생성/보관)
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+
+export type SendPayload = {
+  caseId: string;
+  npcId: string;
+  text: string;
+};
+
+export type NpcReply = {
+  reply: string;           // ← 백엔드가 반환하는 필드명은 reply
+  [k: string]: unknown;
+};
+
+export async function sendMessage(
+  sessionId: string,
+  payload: SendPayload
+): Promise<NpcReply> {
+  const r = await fetch(`${BASE}/sessions/${encodeURIComponent(sessionId)}/message`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!r.ok) {
+    const msg = await r.text().catch(() => r.statusText);
+    throw new Error(`sendMessage failed: ${r.status} ${msg}`);
+  }
+  return (await r.json()) as NpcReply;
 }
 
-export async function createSession(userId: string, caseId: string) {
-  const r = await fetch(`${BASE}/sessions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, caseId }),
-  });
-  if (!r.ok) throw new Error(`createSession failed: ${r.status}`);
-  return (await r.json()) as { id: string };
-}
-
-export async function sendMessage(sessionId: string, text: string) {
-  const r = await fetch(`${BASE}/sessions/${sessionId}/message`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
-  if (!r.ok) throw new Error(`sendMessage failed: ${r.status}`);
-  return (await r.json()) as { npc_reply: string };
-}
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  'http://localhost:3001';

@@ -1,9 +1,13 @@
 // apps/api/src/app.module.ts
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { SessionsController } from './sessions.controller';
+
+import { AppService } from './app.service';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
-  controllers: [AppController, SessionsController],
+  imports: [MessagesModule],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

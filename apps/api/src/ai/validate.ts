@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // AJV 기반 검증 + 보정 유틸 (ESLint 엄격 설정 대응 버전)
 
 import Ajv, { type AnySchema } from 'ajv';
@@ -233,7 +232,7 @@ export function ensureNpcReply(x: unknown): NpcReplyV1 {
   if (!ok) {
     if (DEBUG) {
       // 세부 에러와 값을 함께 출력해 원인 추적을 용이하게 함
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
       console.error('[AJV] errors:', validate.errors);
       console.error('[AJV] value:', crop(safeStringify(fixed)));
     }

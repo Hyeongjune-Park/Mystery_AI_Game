@@ -1,0 +1,8 @@
+# 윈도우/맥/리눅스 간 라인 엔딩 차이 예방
+* text=auto eol=lf
+
+# 배치 스크립트는 CRLF 유지
+*.bat text eol=crlf
+
+# 쉘 스크립트는 LF
+*.sh text eol=lf

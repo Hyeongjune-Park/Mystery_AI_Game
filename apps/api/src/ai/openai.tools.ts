@@ -121,9 +121,9 @@ export async function callLLMWithTools(params: {
     // e는 unknown → 문자열화해서 안전하게 로깅
     if (process.env.NODE_ENV !== 'production') {
       const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-      // eslint-disable-next-line no-console
+
       console.error('[LLM] JSON.parse failed:', msg);
-      // eslint-disable-next-line no-console
+
       console.error('[LLM] argsText snapshot:', argsText.slice(0, 500));
     }
     throw new Error('BAD_ARGS_JSON: Invalid tool arguments JSON.');

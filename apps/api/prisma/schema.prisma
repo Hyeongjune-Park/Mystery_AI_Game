@@ -1,0 +1,80 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Case {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  title     String
+  synopsis  String?
+  npcs      NpcProfile[]
+  clues     Clue[]
+  sessions  Session[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model NpcProfile {
+  id          String   @id @default(cuid())
+  caseId      String
+  case        Case     @relation(fields: [caseId], references: [id])
+  name        String
+  role        String
+  personality Json
+  promptRules Json
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Session {
+  id        String          @id @default(cuid())
+  caseId    String
+  case      Case            @relation(fields: [caseId], references: [id])
+  playerId  String?
+  flags     Json
+  messages  Message[]
+  snapshots StateSnapshot[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id])
+  role       String
+  npcName    String?
+  content    String
+  intent     String?
+  tone       String?
+  factsUsed  Json?
+  confidence Float?
+  raw        Json?
+  createdAt  DateTime @default(now())
+}
+
+model Clue {
+  id        String   @id @default(cuid())
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id])
+  code      String   @unique
+  type      String
+  payload   Json
+  revealIf  Json
+  createdAt DateTime @default(now())
+}
+
+model StateSnapshot {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  flags     Json
+  note      String?
+  createdAt DateTime @default(now())
+}

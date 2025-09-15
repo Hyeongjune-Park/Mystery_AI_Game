@@ -7,7 +7,8 @@ pnpm dev:all
 
 Web: apps/web/.env.local → NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 Routes: POST /sessions, POST /sessions/:id/message (echo), GET /health
-Dev page: http://localhost:3000/play/demo
+Dev page: http://localhost:3000/play/c001
+
 
 
 

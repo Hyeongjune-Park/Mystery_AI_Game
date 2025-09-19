@@ -1,10 +1,43 @@
 # Node/Next
 node_modules/
-pnpm-lock.yaml
-.next/
 dist/
+.next/
 coverage/
 .turbo/
-# env
-.env
-.env.*
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# IDEs and editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# dotenv (실제 키/환경파일은 무시)
+apps/api/.env
+apps/web/.env.local
+apps/api/prisma/dev.db
+
+# Allow example envs (커밋 O)
+!apps/api/.env.example
+!apps/web/.env.local.example
+
+# Tests
+coverage/
+.nyc_output/
+
+# Prisma generated (client는 node_modules 안에 생성됨)
+generated/prisma

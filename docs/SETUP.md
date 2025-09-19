@@ -7,4 +7,11 @@
 
 ## Run
 pnpm install
+
+pnpm -C apps/api prisma:gen
+pnpm -C apps/api prisma:deploy
+
 pnpm dev:all
+
+## test link
+http://localhost:3000/play/c001

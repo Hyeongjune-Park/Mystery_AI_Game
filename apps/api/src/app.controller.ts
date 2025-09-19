@@ -1,14 +1,10 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+// apps/api/src/app.controller.ts
+import { Controller, Get } from '@nestjs/common';
 
 @Controller()
 export class AppController {
   @Get('health')
-  getHealth() {
-    return { ok: true };
-  }
-
-  @Post('echo')
-  echo(@Body() body: { message: string }) {
-    return { reply: `echo: ${body.message}` };
+  health() {
+    return { status: 'ok' }; // 민감정보 노출 금지
   }
 }

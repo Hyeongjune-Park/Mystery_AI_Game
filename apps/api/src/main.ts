@@ -1,8 +1,13 @@
 // apps/api/src/main.ts
 // ✅ CORS 허용 + PORT/HOST 환경변수 적용
 import 'dotenv/config';
+import * as path from 'node:path';
+import { config as dotenv } from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+
+// ✅ prisma/.env도 로드해서 DATABASE_URL을 확실히 세팅
+dotenv({ path: path.resolve(__dirname, '../prisma/.env') });
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);

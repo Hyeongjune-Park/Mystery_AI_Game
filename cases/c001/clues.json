@@ -1,0 +1,18 @@
+[
+  {
+    "code": "clue.timetable.last_train_2340",
+    "type": "direct",
+    "title": "Last train departure",
+    "summary": "The last train leaves the station at 23:40.",
+    "importance": 0.8,
+    "synonyms": ["last train", "final train", "23:40"],
+    "patterns": ["23:?40.*train"]
+  },
+  {
+    "code": "clue.alibi.weak_station",
+    "type": "indirect",
+    "title": "Weak alibi at the station",
+    "summary": "The suspect claimed to be at the station, but it is usually empty.",
+    "importance": 0.6
+  }
+]

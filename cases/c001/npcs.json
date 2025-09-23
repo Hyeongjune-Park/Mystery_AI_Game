@@ -1,0 +1,16 @@
+[
+  {
+    "id": "npc.detective",
+    "displayName": "Detective Doil",
+    "persona": "Serious, logical, professional",
+    "knowledgeScope": ["crime_scene", "timetable"],
+    "deception": { "allowed": false }
+  },
+  {
+    "id": "npc.suspect1",
+    "displayName": "Suspect A",
+    "persona": "Nervous, evasive",
+    "knowledgeScope": ["personal_alibi"],
+    "deception": { "allowed": true, "motives": ["cover-up"], "maxLies": 2 }
+  }
+]

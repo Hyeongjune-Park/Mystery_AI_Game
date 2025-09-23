@@ -1,0 +1,20 @@
+{
+  "initialState": "greet",
+  "states": {
+    "greet": {
+      "prompt": { "system": "Welcome to the case.", "developer": "Intro context" },
+      "transitions": [{ "to": "gather_clues", "guard": {} }]
+    },
+    "gather_clues": {
+      "prompt": { "system": "Ask around and collect clues.", "developer": "Focus on suspects and evidence" },
+      "transitions": [
+        {
+          "to": "connect_dots",
+          "guard": {
+            "requiredClues": [{ "code": "clue.timetable.last_train_2340", "minConfidence": 0.7 }]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,9 +1,7 @@
+// apps/web/tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],  // ✅ src 전체 스캔
   theme: { extend: {} },
   plugins: [],
 };

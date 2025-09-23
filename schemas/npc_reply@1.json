@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NpcReplyV1",
+  "type": "object",
+  "required": ["npc", "reply", "facts_extracted", "proposed_clues"],
+  "properties": {
+    "npc": { "type": "string" },
+    "reply": { "type": "string" },
+    "facts_extracted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subject": { "type": "string" },
+          "predicate": { "type": "string" },
+          "value": { "type": "string" },
+          "certainty": { "type": "number" }
+        },
+        "required": ["subject", "predicate", "value"]
+      }
+    },
+    "proposed_clues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "confidence": { "type": "number" },
+          "tentative": { "type": "boolean" }
+        },
+        "required": ["code", "confidence"]
+      }
+    }
+  }
+}

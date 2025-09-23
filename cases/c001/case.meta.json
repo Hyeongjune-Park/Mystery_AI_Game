@@ -1,0 +1,13 @@
+{
+  "id": "c001",
+  "title": "TODO: Case Title",
+  "estimatedMinutes": 30,
+  "endings": [
+    { "id": "normal", "label": "Standard ending", "tier": "normal" },
+    { "id": "true", "label": "Expose the mastermind", "tier": "true" }
+  ],
+  "randomization": {
+    "clueOrder": true,
+    "decoyRate": 0.2
+  }
+}

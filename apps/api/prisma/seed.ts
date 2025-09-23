@@ -1,5 +1,10 @@
 // 개발용 샘플 시드: 사건/NPC/단서
+import * as path from 'node:path';
+import { config as dotenv } from 'dotenv';
+dotenv({ path: path.resolve(__dirname, '.env') });
+
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 async function main() {

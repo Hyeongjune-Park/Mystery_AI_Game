@@ -1,14 +1,32 @@
+// apps/api/src/main.ts
+// ✅ CORS 허용 + PORT/HOST 환경변수 적용
+import 'dotenv/config';
+import * as path from 'node:path';
+import { config as dotenv } from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+
+// ✅ prisma/.env도 로드해서 DATABASE_URL을 확실히 세팅
+dotenv({ path: path.resolve(__dirname, '../prisma/.env') });
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  // 브라우저에서 웹(3000) → API(3001) 접근 허용
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+      : ['http://localhost:3000'],
+    credentials: true,
+  });
+
   // 종료 시 provider들의 onModuleDestroy 호출 활성화
   app.enableShutdownHooks();
 
-  await app.listen(3001);
+  const PORT = Number(process.env.PORT ?? 3001);
+  const HOST = process.env.HOST ?? '0.0.0.0';
+  await app.listen(PORT, HOST);
+  // console.log(`API listening on http://${HOST}:${PORT}`);
 }
 
-// 톱레벨 Promise 대기하지 않음을 명시(ESLint no-floating-promises 대응)
 void bootstrap();

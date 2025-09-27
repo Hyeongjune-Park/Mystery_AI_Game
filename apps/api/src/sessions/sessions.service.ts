@@ -143,14 +143,14 @@ export class SessionsService {
       data: { flags: payload as unknown as Prisma.InputJsonValue },
     });
 
-    // 스냅샷이 필요하면 주석 해제
-    // await this.prisma.stateSnapshot.create({
-    //   data: {
-    //     sessionId: id,
-    //     flags: payload as unknown as Prisma.InputJsonValue,
-    //     note: state.node ?? null,
-    //   },
-    // });
+    // 상태 변경 이력 저장
+    await this.prisma.stateSnapshot.create({
+      data: {
+        sessionId: id,
+        flags: payload as unknown as Prisma.InputJsonValue,
+        note: state.node ?? null,
+      },
+    });
   }
 
   async listTimeline(

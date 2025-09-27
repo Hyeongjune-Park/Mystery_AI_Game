@@ -47,8 +47,8 @@ model Session {
 model Message {
   id         String   @id @default(cuid())
   sessionId  String
-  session    Session  @relation(fields: [sessionId], references: [id])
-  role       String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role       String // 'player' | 'npc'
   npcName    String?
   content    String
   intent     String?
@@ -56,7 +56,11 @@ model Message {
   factsUsed  Json?
   confidence Float?
   raw        Json?
+  // LLM의 검증된 응답(NpcReplyV1) 원본을 저장(선택)
+  payloadJson Json?
   createdAt  DateTime @default(now())
+  // 조회 성능 핵심 인덱스
+  @@index([sessionId, createdAt])
 }
 
 model Clue {

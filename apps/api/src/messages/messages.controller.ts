@@ -2,7 +2,15 @@
  * 플레이어 발화 → 컨텍스트 구성 → LLM 호출(tools) → 검증 → 세션 반영 → JSON 반환
  * 실패해도 항상 200 + NpcReplyV1 폴백으로 응답하여 UX가 끊기지 않도록 보호
  */
-import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Logger,
+  Param,
+  Post,
+  Get,
+  Query,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
 import { SessionsService } from '../sessions/sessions.service';
@@ -99,12 +107,14 @@ export class MessagesController {
         message: '요청 형식이 올바르지 않습니다.',
       });
     }
-    const dto = body;
+    const dto: MessageDto = body;
     const userText =
       dto.text.length > 1_000 ? `${dto.text.slice(0, 1_000)}…` : dto.text;
 
     // 1) 세션 + 플레이어 로그
-    const session = await Promise.resolve(this.sessions.getOrCreate(sessionId));
+    const session = await Promise.resolve(
+      this.sessions.getOrCreate(sessionId, dto.caseId),
+    );
     await Promise.resolve(
       this.sessions.append(sessionId, { from: 'player', text: userText }),
     ).catch((e) =>
@@ -135,7 +145,7 @@ export class MessagesController {
         message: '해당 인물/상태를 찾을 수 없습니다.',
       });
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }),
+        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
       ).catch(() => void 0);
       return fb;
     }
@@ -184,7 +194,11 @@ export class MessagesController {
       };
 
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: json.reply }),
+        this.sessions.append(
+          sessionId,
+          { from: 'npc', text: json.reply },
+          json,
+        ),
       ).catch(() => void 0);
 
       if (json.state?.node) {
@@ -211,5 +225,21 @@ export class MessagesController {
       ).catch(() => void 0);
       return fb;
     }
+  }
+
+  @Get('/sessions/:id/timeline')
+  async timeline(
+    @Param('id') sessionId: string,
+    @Query('limit') limit?: string,
+  ): Promise<{
+    sessionId: string;
+    items: Array<{ at: string; from: 'player' | 'npc'; text: string }>;
+  }> {
+    const n = Math.min(Math.max(Number(limit ?? '50'), 1), 200);
+    const items = await this.sessions.listTimeline(sessionId, n);
+    return {
+      sessionId,
+      items: items.map((i) => ({ ...i, at: i.at.toISOString() })),
+    };
   }
 }

@@ -21,6 +21,7 @@ import { ensureNpcReply } from '../ai/validate';
 import type { NpcReplyV1 } from '../ai/schema';
 import { INTENT_FALLBACK } from '../ai/schema';
 import { LRU, makeKey } from '../ai/cache';
+import { computeDramaticChoices } from '../ai/choices';
 
 const replyCache = new LRU<NpcReplyV1>(200);
 const API_VERSION = '2025-08-30' as const;
@@ -60,10 +61,20 @@ function makeFallback(params: {
   message?: string;
   npcName?: string;
   npcRole?: string;
+  choicesHint?: { id: string; label: string; hint?: string }[]; // ✅ 선택지(조건부)
 }): NpcReplyV1 {
-  const { sessionId, npcId, node, flags, message, npcName, npcRole } = params;
+  const {
+    sessionId,
+    npcId,
+    node,
+    flags,
+    message,
+    npcName,
+    npcRole,
+    choicesHint,
+  } = params;
 
-  return {
+  const base: NpcReplyV1 = {
     api_version: API_VERSION,
     schema_version: SCHEMA_VERSION,
     session_id: sessionId,
@@ -84,6 +95,11 @@ function makeFallback(params: {
       flags: [...(flags ?? [])],
     },
   };
+
+  // ✅ any 멤버접근 없이 안전하게 병합
+  return choicesHint && choicesHint.length > 0
+    ? { ...base, choices: choicesHint }
+    : base;
 }
 
 @Controller()
@@ -143,6 +159,10 @@ export class MessagesController {
         node: nodeForFallback,
         flags: flagsForFallback,
         message: '해당 인물/상태를 찾을 수 없습니다.',
+        choicesHint: computeDramaticChoices({
+          node: nodeForFallback,
+          flags: flagsForFallback,
+        }),
       });
       await Promise.resolve(
         this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
@@ -161,7 +181,11 @@ export class MessagesController {
     const cached = replyCache.get(cacheKey);
     if (cached) {
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: cached.reply }),
+        this.sessions.append(
+          sessionId,
+          { from: 'npc', text: cached.reply },
+          cached,
+        ),
       ).catch(() => void 0);
       return cached;
     }
@@ -177,8 +201,16 @@ export class MessagesController {
       // 5-1) 원본을 스키마로 1차 검증
       const base = ensureNpcReply(raw);
 
-      // 5-2) 허용된 키만 복사(추가 필드 제거) + 메타 보강
-      const json: NpcReplyV1 = {
+      // 5-2) 드라마틱 선택지(모델이 안 줬을 때만 제공)
+      const dramatic = computeDramaticChoices({
+        node: base.state?.node ?? ctx.npc.node,
+        flags: base.state?.flags ?? ctx.npc.flags,
+      });
+
+      // 5-3) 허용된 키만 복사(추가 필드 제거) + 메타 보강
+      const mergedChoices = base.choices ?? dramatic;
+
+      const replyObj: NpcReplyV1 = {
         api_version: API_VERSION,
         schema_version: SCHEMA_VERSION,
         session_id: sessionId,
@@ -190,25 +222,25 @@ export class MessagesController {
         confidence: base.confidence,
         facts_used: base.facts_used ?? [],
         state: base.state,
-        ...(base.choices ? { choices: base.choices } : null),
+        ...(mergedChoices ? { choices: mergedChoices } : {}), // ✅ 타입 안전
       };
 
       await Promise.resolve(
         this.sessions.append(
           sessionId,
-          { from: 'npc', text: json.reply },
-          json,
+          { from: 'npc', text: replyObj.reply },
+          replyObj,
         ),
       ).catch(() => void 0);
 
-      if (json.state?.node) {
+      if (replyObj.state?.node) {
         await Promise.resolve(
-          this.sessions.setState(sessionId, json.state),
+          this.sessions.setState(sessionId, replyObj.state),
         ).catch(() => void 0);
       }
 
-      replyCache.set(cacheKey, json);
-      return json;
+      replyCache.set(cacheKey, replyObj);
+      return replyObj;
     } catch (e) {
       this.logger.error(`LLM/validate failed: ${toLogMessage(e)}`);
       const fb = makeFallback({
@@ -219,14 +251,19 @@ export class MessagesController {
         flags: flagsForFallback,
         npcName: ctx?.npc?.name,
         npcRole: ctx?.npc?.role,
+        choicesHint: computeDramaticChoices({
+          node: nodeForFallback,
+          flags: flagsForFallback,
+        }),
       });
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }),
+        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
       ).catch(() => void 0);
       return fb;
     }
   }
 
+  // 타임라인 유지
   @Get('/sessions/:id/timeline')
   async timeline(
     @Param('id') sessionId: string,

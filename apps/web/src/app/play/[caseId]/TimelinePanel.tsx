@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { fetchTimeline } from "@/lib/api";
 
 type Item = { at: string; from: 'player' | 'npc'; text: string };
 
@@ -14,7 +15,8 @@ export default function TimelinePanel({ sessionId }: { sessionId: string }) {
       setLoading(true);
       try {
         const base = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
-        const res = await fetch(`${base}/sessions/${sessionId}/timeline?limit=100`);
+        const res = await fetchTimeline(sessionId, 100);
+        setItems(res.items ?? []);
         const json = await res.json();
         if (!canceled) setItems(json.items ?? []);
       } catch {

@@ -1,18 +1,538 @@
 [
   {
-    "code": "clue.timetable.last_train_2340",
-    "type": "direct",
-    "title": "Last train departure",
-    "summary": "The last train leaves the station at 23:40.",
-    "importance": 0.8,
-    "synonyms": ["last train", "final train", "23:40"],
-    "patterns": ["23:?40.*train"]
+    "code": "clue.crime_scene.layout",
+    "tier": "small",
+    "type": "background",
+    "title": "현장 레이아웃",
+    "description": "피해자의 집은 5층 건물의 4층. 옥상으로 올라가는 계단이 있음.",
+    "importance": 0.3,
+    "solution_critical": false,
+    "autoReveal": true,
+    "revealCondition": null,
+    "supports": ["clue.rooftop.access"],
+    "contradicts": []
   },
   {
-    "code": "clue.alibi.weak_station",
-    "type": "indirect",
-    "title": "Weak alibi at the station",
-    "summary": "The suspect claimed to be at the station, but it is usually empty.",
-    "importance": 0.6
+    "code": "clue.victim.profile",
+    "tier": "small",
+    "type": "background",
+    "title": "피해자 프로필",
+    "description": "김재현(35세), 유명 와인 소믈리에. 최근 와인 컬렉션 관련 방송 출연.",
+    "importance": 0.4,
+    "solution_critical": false,
+    "autoReveal": true,
+    "revealCondition": null,
+    "supports": ["clue.victim.wine_preference"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.small.weather",
+    "tier": "small",
+    "type": "background",
+    "title": "사건 당일 날씨",
+    "description": "사건 당일 밤 비가 왔음",
+    "importance": 0.2,
+    "solution_critical": false,
+    "autoReveal": true,
+    "revealCondition": null,
+    "supports": [],
+    "contradicts": []
+  },
+  {
+    "code": "clue.small.victim_habit",
+    "tier": "small",
+    "type": "background",
+    "title": "피해자 생활 습관",
+    "description": "피해자는 평소 조용하고 규칙적인 생활을 함",
+    "importance": 0.2,
+    "solution_critical": false,
+    "autoReveal": true,
+    "revealCondition": null,
+    "supports": [],
+    "contradicts": []
+  },
+  {
+    "code": "clue.fingerprint.wineglass",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "와인잔의 지문",
+    "description": "현장에서 발견된 와인잔에서 박민서의 지문이 검출됨. 와인잔은 깨끗이 씻겨있었으나 손잡이 부분에 지문이 남아있었음.",
+    "importance": 0.95,
+    "solution_critical": true,
+    "autoReveal": true,
+    "revealCondition": null,
+    "supports": ["clue.suspect.was_at_scene"],
+    "contradicts": ["clue.suspect.alibi_home"]
+  },
+  {
+    "code": "clue.victim.wine_preference",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "피해자의 와인 취향",
+    "description": "피해자는 레드 와인을 좋아했지만, 최근에는 건강 때문에 술을 자제하고 있었다.",
+    "importance": 0.6,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["와인", "술", "마시", "취향"],
+          "minKeywords": 2,
+          "contextRequired": "victim_habits"
+        }
+      ],
+      "npcKnowledge": ["npc.friend.suji", "npc.detective.doil"]
+    },
+    "supports": ["clue.victim.no_alcohol_habit"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.victim.no_alcohol_habit",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "피해자의 금주",
+    "description": "친구 이수진의 증언: 피해자는 최근 2개월간 건강 검진 결과 때문에 완전히 금주 중이었다.",
+    "importance": 0.8,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["술", "금주", "건강", "마시지 않", "끊"],
+          "minKeywords": 2,
+          "contextRequired": "victim_habits"
+        },
+        {
+          "type": "evidence_based",
+          "requiredClues": ["clue.fingerprint.wineglass"],
+          "playerMustMention": ["와인잔", "술", "이상"]
+        }
+      ],
+      "npcKnowledge": ["npc.friend.suji"]
+    },
+    "supports": ["clue.forensic.sleeping_pill"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.forensic.sleeping_pill",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "혈액 검사 결과",
+    "description": "피해자의 혈액에서 수면제 성분(졸피뎀) 검출. 치사량은 아니지만 의식을 잃기에 충분한 양.",
+    "importance": 1.0,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["부검", "혈액", "검사", "약물", "독극물"],
+          "minKeywords": 2,
+          "contextRequired": "forensic_inquiry"
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil"]
+    },
+    "supports": ["clue.suspect.prescription"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.suspect.prescription",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "박민서의 수면제 처방 기록",
+    "description": "박민서는 3개월 전부터 불면증으로 졸피뎀을 처방받아 복용 중이었음.",
+    "importance": 0.85,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "evidence_based",
+          "requiredClues": ["clue.forensic.sleeping_pill"],
+          "playerMustMention": ["수면제", "처방", "누구", "복용"]
+        },
+        {
+          "type": "keyword_cluster",
+          "keywords": ["박민서", "약", "처방", "병원", "수면제"],
+          "minKeywords": 3,
+          "contextRequired": "suspect_investigation"
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil"]
+    },
+    "supports": ["clue.method.drugged_wine"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.cctv.station_2315",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "역 CCTV 영상",
+    "description": "사건 당일 23시 15분, 피해자 집에서 도보 5분 거리의 지하철역 CCTV에 박민서가 포착됨.",
+    "importance": 0.9,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["CCTV", "영상", "카메라", "목격", "역"],
+          "minKeywords": 2,
+          "contextRequired": "evidence_request"
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil"]
+    },
+    "supports": ["clue.suspect.was_near_scene"],
+    "contradicts": ["clue.suspect.alibi_home"]
+  },
+  {
+    "code": "clue.suspect.alibi_home",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "박민서의 알리바이",
+    "description": "박민서의 주장: '23시에는 집에서 TV를 보고 있었다'",
+    "importance": 0.7,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["어디", "있었", "알리바이", "23시", "11시"],
+          "minKeywords": 2,
+          "contextRequired": "alibi_inquiry"
+        }
+      ],
+      "npcKnowledge": ["npc.suspect.minseo"]
+    },
+    "supports": [],
+    "contradicts": ["clue.cctv.station_2315", "clue.witness.neighbor_saw"]
+  },
+  {
+    "code": "clue.suspect.was_near_scene",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "박민서의 거짓말 시인",
+    "description": "CCTV 증거를 제시하자 박민서가 시인함: '그날 밤 피해자 집 근처에 있었던 건 사실이에요. 하지만 안에 들어가지는 않았어요!'",
+    "importance": 0.85,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "lie_exposed",
+      "parentLie": "lie.alibi_home",
+      "requiredClues": ["clue.cctv.station_2315"]
+    },
+    "supports": ["clue.timeline.2315"],
+    "contradicts": ["clue.suspect.alibi_home"]
+  },
+  {
+    "code": "clue.timeline.noise_2300",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "이웃 증언: 23시 소음",
+    "description": "이웃 주민 증언: '23시쯤 위층에서 큰 소리가 들렸어요. 뭔가 넘어지는 소리 같았죠.'",
+    "importance": 0.7,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["소리", "소음", "들렸", "23시", "11시"],
+          "minKeywords": 2,
+          "contextRequired": "time_inquiry"
+        },
+        {
+          "type": "indirect_approach",
+          "keywords": ["이웃", "주변", "누가", "목격"],
+          "npcTrait": "gossipy"
+        }
+      ],
+      "npcKnowledge": ["npc.witness.neighbor"]
+    },
+    "supports": ["clue.timeline.2340"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.witness.neighbor_saw",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "이웃 목격담",
+    "description": "이웃 주민이 23시 15분경 건물 입구에서 누군가를 봤다고 증언. 정확한 인상착의는 기억 못하지만 '젊은 여자였던 것 같다'고 함.",
+    "importance": 0.6,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "pressure_interrogation",
+          "indicators": ["반복 질문", "자세히", "더"],
+          "npcState": "cooperative",
+          "minTurns": 2
+        }
+      ],
+      "npcKnowledge": ["npc.witness.neighbor"]
+    },
+    "supports": ["clue.suspect.was_near_scene"],
+    "contradicts": ["clue.suspect.alibi_home"]
+  },
+  {
+    "code": "clue.relationship.past",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "과거 연인 관계",
+    "description": "박민서와 피해자는 1년간 연인 관계였으나 2주 전 결별함.",
+    "importance": 0.7,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["관계", "사귀", "연인", "박민서", "피해자"],
+          "minKeywords": 2,
+          "contextRequired": "relationship_inquiry"
+        }
+      ],
+      "npcKnowledge": ["npc.friend.suji", "npc.suspect.minseo"]
+    },
+    "supports": ["clue.motive.breakup"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.sns.couple_photos",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "SNS 커플 사진",
+    "description": "피해자의 SNS에서 박민서와의 커플 사진 다수 발견. 6개월 전까지 정기적으로 업로드되다가 최근 2개월간 삭제됨.",
+    "importance": 0.65,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["SNS", "사진", "인스타", "페이스북", "온라인"],
+          "minKeywords": 2,
+          "contextRequired": "digital_evidence"
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil", "npc.friend.suji"]
+    },
+    "supports": ["clue.relationship.past"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.motive.breakup",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "결별 동기",
+    "description": "이수진 증언: '재현이가 결혼을 원했는데 민서씨가 거부했대요. 그래서 재현이가 일방적으로 헤어지자고 했대요. 민서씨가 많이 화났었다고...'",
+    "importance": 0.8,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "evidence_based",
+          "requiredClues": ["clue.relationship.past"],
+          "playerMustMention": ["왜", "이유", "헤어", "결별"]
+        }
+      ],
+      "npcKnowledge": ["npc.friend.suji"]
+    },
+    "supports": ["clue.victim.insurance_beneficiary"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.victim.insurance_beneficiary",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "보험금 수익자",
+    "description": "피해자의 생명보험(5억원) 수익자가 박민서로 등록되어 있음. 1년 전 등록됨.",
+    "importance": 0.95,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["보험", "수익자", "금전", "돈", "재산"],
+          "minKeywords": 2,
+          "contextRequired": "financial_motive"
+        },
+        {
+          "type": "evidence_based",
+          "requiredClues": ["clue.motive.breakup"],
+          "playerMustMention": ["이득", "돈", "금전"]
+        }
+      ],
+      "npcKnowledge": ["npc.friend.suji", "npc.detective.doil"]
+    },
+    "supports": ["clue.motive.financial"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.motive.financial",
+    "tier": "critical",
+    "type": "deduction",
+    "title": "금전적 동기",
+    "description": "결별 후에도 보험금 수익자가 박민서로 유지됨. 박민서는 결별 이후 재정적 어려움을 겪고 있었다는 정황 포착.",
+    "importance": 1.0,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "evidence_based",
+          "requiredClues": ["clue.victim.insurance_beneficiary", "clue.motive.breakup"],
+          "playerMustMention": ["동기", "이유", "왜 죽", "목적"]
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil"]
+    },
+    "supports": [],
+    "contradicts": []
+  },
+  {
+    "code": "clue.rooftop.access",
+    "tier": "physical",
+    "type": "evidence",
+    "title": "옥상 출입 기록",
+    "description": "건물 옥상 출입문에 남아있는 지문 분석 결과, 박민서의 지문이 검출됨. 시간대는 확인 불가.",
+    "importance": 0.85,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["옥상", "지붕", "추락", "어디서"],
+          "minKeywords": 2,
+          "contextRequired": "crime_scene_detail"
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil"]
+    },
+    "supports": ["clue.method.pushed_from_rooftop"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.method.drugged_wine",
+    "tier": "critical",
+    "type": "deduction",
+    "title": "범행 수법: 수면제 와인",
+    "description": "피해자는 평소 술을 마시지 않았으나, 현장에서 와인잔 발견. 와인에 수면제를 탄 것으로 추정.",
+    "importance": 1.0,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "player_deduction",
+      "requiredClues": [
+        "clue.victim.no_alcohol_habit",
+        "clue.forensic.sleeping_pill",
+        "clue.fingerprint.wineglass"
+      ]
+    },
+    "supports": ["clue.method.pushed_from_rooftop"],
+    "contradicts": []
+  },
+  {
+    "code": "clue.method.pushed_from_rooftop",
+    "tier": "critical",
+    "type": "deduction",
+    "title": "범행 수법: 옥상 추락 위장",
+    "description": "의식을 잃은 피해자를 옥상으로 운반하여 추락시킨 뒤 자살로 위장.",
+    "importance": 1.0,
+    "solution_critical": true,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "player_deduction",
+      "requiredClues": [
+        "clue.method.drugged_wine",
+        "clue.rooftop.access",
+        "clue.timeline.noise_2300"
+      ]
+    },
+    "supports": [],
+    "contradicts": []
+  },
+  {
+    "code": "clue.timeline.2340",
+    "tier": "conversational",
+    "type": "testimony",
+    "title": "범행 시간 추정",
+    "description": "도일 형사의 분석: '소음이 들린 23시경 피해자가 의식을 잃었고, 23시 40분경 옥상에서 추락한 것으로 추정됩니다.'",
+    "importance": 0.8,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "evidence_based",
+          "requiredClues": ["clue.timeline.noise_2300", "clue.rooftop.access"],
+          "playerMustMention": ["시간", "언제", "몇 시"]
+        }
+      ],
+      "npcKnowledge": ["npc.detective.doil"]
+    },
+    "supports": [],
+    "contradicts": []
+  },
+  {
+    "code": "clue.decoy.suicide_note",
+    "tier": "physical",
+    "type": "decoy",
+    "title": "유서 (미끼)",
+    "description": "현장에서 발견된 유서. '더 이상 살고 싶지 않습니다'라고 적혀 있음. 하지만 필적 감정 결과 피해자의 필체와 미세하게 다름.",
+    "importance": 0.1,
+    "solution_critical": false,
+    "autoReveal": true,
+    "revealCondition": null,
+    "supports": [],
+    "contradicts": ["clue.method.pushed_from_rooftop"]
+  },
+  {
+    "code": "clue.decoy.stranger_witness",
+    "tier": "conversational",
+    "type": "decoy",
+    "title": "낯선 남성 목격담 (미끼)",
+    "description": "한 목격자가 23시 30분경 건물 근처에서 낯선 남성을 봤다고 증언. 하지만 CCTV 확인 결과 해당 시간대에 남성은 포착되지 않음.",
+    "importance": 0.1,
+    "solution_critical": false,
+    "autoReveal": false,
+    "revealCondition": {
+      "mode": "conversational",
+      "triggers": [
+        {
+          "type": "keyword_cluster",
+          "keywords": ["목격", "누가", "남자", "사람"],
+          "minKeywords": 2,
+          "contextRequired": "witness_inquiry"
+        }
+      ],
+      "npcKnowledge": ["npc.witness.neighbor"]
+    },
+    "supports": [],
+    "contradicts": ["clue.cctv.station_2315"]
   }
 ]

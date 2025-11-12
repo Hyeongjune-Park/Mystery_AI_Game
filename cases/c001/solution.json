@@ -1,0 +1,179 @@
+{
+  "culprit": "npc.suspect.minseo",
+  "victim": {
+    "id": "victim.jaehyun",
+    "name": "김재현",
+    "age": 35,
+    "occupation": "와인 소믈리에"
+  },
+  "motive": {
+    "primary": "보험금 수령 및 결별 후 재정적 어려움",
+    "secondary": "결별에 대한 분노와 배신감",
+    "keywords": [
+      "보험금",
+      "금전",
+      "돈",
+      "재산",
+      "수익자",
+      "5억",
+      "결별",
+      "헤어짐",
+      "화",
+      "분노"
+    ],
+    "description": "박민서와 김재현은 1년간 연인 관계였으나, 김재현이 결혼을 원했으나 박민서가 거부하여 2주 전 일방적으로 결별. 생명보험(5억원)의 수익자는 여전히 박민서로 등록되어 있었고, 박민서는 결별 이후 재정적 어려움을 겪고 있었음."
+  },
+  "method": {
+    "description": "수면제를 탄 와인을 제공하여 피해자를 의식 불명 상태로 만든 뒤, 옥상으로 운반하여 추락시켜 자살로 위장",
+    "keywords": [
+      "수면제",
+      "졸피뎀",
+      "와인",
+      "술",
+      "의식 잃",
+      "옥상",
+      "추락",
+      "자살 위장",
+      "운반"
+    ],
+    "steps": [
+      "박민서가 피해자 집을 방문 (23시경)",
+      "피해자에게 수면제를 섞은 와인을 권함",
+      "피해자가 술을 마시고 의식을 잃음 (23시~23시 15분)",
+      "의식을 잃은 피해자를 옥상으로 운반 (23시 15분~23시 30분)",
+      "옥상에서 피해자를 추락시킴 (23시 40분경)",
+      "현장을 정리하고 떠남 (23시 50분경)",
+      "자살로 위장하기 위해 위조 유서 작성 (사전 준비)"
+    ],
+    "weaponOrTools": [
+      "졸피뎀 (수면제)",
+      "와인",
+      "와인잔"
+    ]
+  },
+  "timeOfCrime": "23:40",
+  "timeline": [
+    {
+      "time": "22:50",
+      "event": "박민서가 피해자 집 근처 도착",
+      "location": "건물 입구",
+      "evidence": []
+    },
+    {
+      "time": "23:00",
+      "event": "박민서가 피해자 집 방문, 와인 제공",
+      "location": "피해자 집 (4층)",
+      "evidence": ["clue.fingerprint.wineglass"]
+    },
+    {
+      "time": "23:00~23:15",
+      "event": "피해자가 수면제 섞인 와인을 마시고 의식 잃음. 소음 발생 (넘어지는 소리)",
+      "location": "피해자 집 (4층)",
+      "evidence": [
+        "clue.timeline.noise_2300",
+        "clue.forensic.sleeping_pill"
+      ]
+    },
+    {
+      "time": "23:15",
+      "event": "박민서가 건물을 잠시 나와 주변 확인 후 재진입",
+      "location": "지하철역 근처",
+      "evidence": [
+        "clue.cctv.station_2315",
+        "clue.witness.neighbor_saw"
+      ]
+    },
+    {
+      "time": "23:15~23:30",
+      "event": "박민서가 의식 잃은 피해자를 옥상으로 운반",
+      "location": "4층 → 옥상",
+      "evidence": ["clue.rooftop.access"]
+    },
+    {
+      "time": "23:40",
+      "event": "피해자를 옥상에서 추락시킴",
+      "location": "건물 옥상",
+      "evidence": [
+        "clue.rooftop.access",
+        "clue.timeline.2340"
+      ]
+    },
+    {
+      "time": "23:50",
+      "event": "박민서가 현장 정리 후 떠남",
+      "location": "건물",
+      "evidence": []
+    },
+    {
+      "time": "00:30 (다음날)",
+      "event": "이웃이 비명 소리를 듣고 경찰 신고",
+      "location": "건물 주변",
+      "evidence": []
+    }
+  ],
+  "criticalClues": [
+    "clue.fingerprint.wineglass",
+    "clue.victim.no_alcohol_habit",
+    "clue.forensic.sleeping_pill",
+    "clue.suspect.prescription",
+    "clue.cctv.station_2315",
+    "clue.suspect.was_near_scene",
+    "clue.victim.insurance_beneficiary",
+    "clue.motive.financial",
+    "clue.rooftop.access",
+    "clue.method.drugged_wine",
+    "clue.method.pushed_from_rooftop"
+  ],
+  "supportingClues": [
+    "clue.timeline.noise_2300",
+    "clue.witness.neighbor_saw",
+    "clue.relationship.past",
+    "clue.motive.breakup",
+    "clue.sns.couple_photos",
+    "clue.timeline.2340"
+  ],
+  "decoyClues": [
+    "clue.decoy.suicide_note",
+    "clue.decoy.stranger_witness"
+  ],
+  "hasMastermind": false,
+  "hasAccomplice": false,
+  "endingThresholds": {
+    "true_ending": {
+      "culpritCorrect": true,
+      "evidenceScore": 0.9,
+      "motiveMatch": true,
+      "methodMatch": true,
+      "timeMatch": true,
+      "description": "범인, 동기, 방법, 시간을 모두 정확히 밝히고 핵심 증거 90% 이상 제시"
+    },
+    "normal_ending": {
+      "culpritCorrect": true,
+      "evidenceScore": 0.6,
+      "description": "범인을 정확히 지목하고 핵심 증거 60% 이상 제시"
+    },
+    "bad_ending": {
+      "culpritCorrect": false,
+      "description": "범인을 잘못 지목하거나 증거가 60% 미만"
+    },
+    "timeout_ending": {
+      "turnExceeded": true,
+      "description": "턴 수 초과"
+    }
+  },
+  "epilogues": {
+    "true_ending": "완벽한 추리였습니다!\n\n당신은 박민서가 수면제를 섞은 와인으로 피해자를 의식불명 상태로 만든 뒤 옥상에서 추락시켜 자살로 위장한 사실을 밝혀냈습니다. 5억원의 보험금과 결별에 대한 분노가 범행 동기였죠.\n\nCCTV 영상, 지문 분석, 혈액 검사 결과 등 모든 증거가 당신의 추리를 뒷받침합니다. 박민서는 결국 자신의 거짓말이 들통나며 범행을 자백했습니다.\n\n이 사건은 당신 덕분에 완전히 해결되었습니다.",
+    "normal_ending": "범인을 정확히 지목하셨습니다.\n\n박민서가 범인이라는 사실은 밝혀냈지만, 정확한 범행 수법과 동기의 일부는 미스터리로 남았습니다. 그럼에도 수집한 증거로 기소는 가능합니다.\n\n추가 수사를 통해 나머지 진실도 밝혀질 것입니다.",
+    "bad_ending": "아쉽게도 추리가 빗나갔습니다.\n\n제시하신 추리에는 중대한 오류가 있습니다. 증거를 다시 검토하고 논리적 모순을 찾아보세요.\n\n사건은 미해결로 종결되었고, 진짜 범인은 도주했습니다...",
+    "timeout_ending": "시간이 너무 오래 걸렸습니다.\n\n범인이 증거를 인멸하고 도주했습니다. 사건은 미제 사건으로 기록됩니다..."
+  },
+  "notes": {
+    "designNotes": "이 케이스는 '금주 중이던 와인 소믈리에의 와인잔'이라는 핵심 모순을 중심으로 설계되었습니다. 플레이어가 피해자의 생활 습관과 현장 증거 사이의 불일치를 발견하는 것이 중요합니다.",
+    "keyContradictions": [
+      "와인잔의 지문 vs 피해자의 금주 습관",
+      "박민서의 알리바이 vs CCTV 영상",
+      "자살 위장 vs 수면제 검출"
+    ],
+    "playerJourney": "플레이어는 먼저 도일 형사와 대화하며 기본 정보를 얻고, 이웃과 친구 이수진으로부터 피해자의 생활 습관을 파악합니다. 박민서를 심문하며 알리바이의 허점을 발견하고, CCTV 증거로 거짓말을 폭로합니다. 보험금 수익자 정보와 수면제 처방 기록을 연결하여 최종 추리에 도달합니다."
+  }
+}

@@ -1,16 +1,225 @@
 [
   {
-    "id": "npc.detective",
-    "displayName": "Detective Doil",
-    "persona": "Serious, logical, professional",
-    "knowledgeScope": ["crime_scene", "timetable"],
-    "deception": { "allowed": false }
+    "id": "npc.detective.doil",
+    "displayName": "도일 형사",
+    "role": "helper",
+    "persona": "냉철하고 논리적인 베테랑 형사. 플레이어를 조력하며 힌트를 제공한다.",
+    "personality": {
+      "traits": ["logical", "patient", "observant", "professional"],
+      "speechPattern": "formal_polite",
+      "emotionalRange": ["calm", "thoughtful", "concerned"]
+    },
+    "knowledge": {
+      "knows": [
+        "clue.crime_scene.layout",
+        "clue.victim.profile",
+        "clue.timeline.discovery",
+        "clue.initial_report"
+      ],
+      "ignores": [
+        "clue.suspect.motive",
+        "clue.suspect.prescription",
+        "clue.victim.insurance"
+      ],
+      "smallClues": [
+        "clue.small.weather",
+        "clue.small.victim_habit",
+        "clue.small.building_access"
+      ]
+    },
+    "deception": {
+      "allowed": false
+    },
+    "lies": [],
+    "stateChanges": [],
+    "hintBehavior": {
+      "enabled": true,
+      "triggers": [
+        {
+          "condition": "no_progress",
+          "check": {
+            "minTurns": 10,
+            "clueCoverage": "<30%",
+            "criticalCluesMissing": ["clue.fingerprint.wineglass", "clue.sleeping_pill.detected"]
+          },
+          "hintType": "direction",
+          "dialogue": "현장을 다시 살펴보는 게 어떨까요? 피해자가 마지막으로 한 행동을 생각해보세요."
+        },
+        {
+          "condition": "contradiction_missed",
+          "check": {
+            "playerHasClues": ["clue.suspect.alibi_home", "clue.cctv.station_2315"],
+            "notConnected": true,
+            "turns_since_acquired": ">5"
+          },
+          "hintType": "connection",
+          "dialogue": "용의자의 알리바이와 CCTV 영상... 뭔가 맞지 않는 부분이 있지 않나요?"
+        }
+      ],
+      "hintCooldown": 5,
+      "maxHintsPerGame": 3
+    }
   },
   {
-    "id": "npc.suspect1",
-    "displayName": "Suspect A",
-    "persona": "Nervous, evasive",
-    "knowledgeScope": ["personal_alibi"],
-    "deception": { "allowed": true, "motives": ["cover-up"], "maxLies": 2 }
+    "id": "npc.suspect.minseo",
+    "displayName": "박민서",
+    "role": "suspect",
+    "persona": "피해자의 전 연인. 겉으로는 침착하지만 내면은 불안하고 방어적이다.",
+    "personality": {
+      "traits": ["defensive", "anxious", "detail-oriented", "calculating"],
+      "speechPattern": "formal_polite",
+      "emotionalRange": ["calm", "nervous", "defensive", "angry", "desperate"]
+    },
+    "knowledge": {
+      "knows": [
+        "clue.victim.profile",
+        "clue.relationship.past",
+        "clue.suspect.alibi_home",
+        "clue.victim.wine_preference"
+      ],
+      "ignores": [
+        "clue.cctv.station_2315",
+        "clue.witness.neighbor_saw",
+        "clue.forensic.sleeping_pill"
+      ],
+      "smallClues": [
+        "clue.small.weather",
+        "clue.small.victim_habit",
+        "clue.small.breakup_timing"
+      ]
+    },
+    "deception": {
+      "allowed": true,
+      "maxLies": 2,
+      "currentLies": 2
+    },
+    "lies": [
+      {
+        "id": "lie.alibi_home",
+        "content": "23시에는 집에 있었어요. TV를 보고 있었죠.",
+        "truth": "실제로는 23시 15분에 역 근처 CCTV에 포착됨",
+        "contradictedBy": [
+          "clue.cctv.station_2315",
+          "clue.witness.neighbor_saw"
+        ],
+        "revealWhen": {
+          "type": "evidence_confrontation",
+          "requiredClues": ["clue.cctv.station_2315"],
+          "playerMustMention": ["CCTV", "23시", "역", "목격"]
+        },
+        "afterExposed": {
+          "newBehavior": "defensive_angry",
+          "revealsClues": ["clue.suspect.was_near_scene"],
+          "newDialogue": "...알았어요. 그날 밤 피해자 집 근처에 있었던 건 사실이에요. 하지만 안에 들어가지는 않았어요!",
+          "emotionalState": "angry"
+        }
+      },
+      {
+        "id": "lie.relationship",
+        "content": "피해자와는 그냥 지인 사이였어요. 별로 친하지 않았죠.",
+        "truth": "실제로는 연인 관계였고 2주 전에 결별함",
+        "contradictedBy": [
+          "clue.sns.couple_photos",
+          "clue.friend.testimony_relationship"
+        ],
+        "revealWhen": {
+          "type": "evidence_confrontation",
+          "requiredClues": ["clue.sns.couple_photos"],
+          "playerMustMention": ["사진", "SNS", "연인", "사귀"]
+        },
+        "afterExposed": {
+          "newBehavior": "breakdown",
+          "revealsClues": [
+            "clue.motive.breakup",
+            "clue.victim.insurance_beneficiary"
+          ],
+          "newDialogue": "...우리 사귀고 있었어요. 근데 헤어졌다고요. 그게 뭐 어때서요?! 그렇다고 제가 죽였다는 건 아니잖아요!",
+          "emotionalState": "breakdown"
+        }
+      }
+    ],
+    "stateChanges": [
+      {
+        "trigger": "flags.includes('alibi_broken')",
+        "newBehavior": "cooperative",
+        "newKnowledge": ["clue.suspect.real_timeline"]
+      },
+      {
+        "trigger": "flags.includes('all_lies_exposed')",
+        "newBehavior": "resigned",
+        "newDialogue": "...이제 더 숨길 것도 없네요. 물어보세요, 뭐든.",
+        "revealsClues": ["clue.suspect.partial_confession"]
+      }
+    ]
+  },
+  {
+    "id": "npc.witness.neighbor",
+    "displayName": "이웃 주민",
+    "role": "witness",
+    "persona": "관찰력이 좋고 수다스러운 이웃. 정보를 쉽게 제공한다.",
+    "personality": {
+      "traits": ["gossipy", "talkative", "observant", "helpful"],
+      "speechPattern": "casual_friendly",
+      "emotionalRange": ["curious", "helpful", "excited"]
+    },
+    "knowledge": {
+      "knows": [
+        "clue.timeline.noise_2300",
+        "clue.witness.saw_person_2315",
+        "clue.victim.quiet_person",
+        "clue.small.building_residents"
+      ],
+      "ignores": [
+        "clue.suspect.identity",
+        "clue.victim.insurance",
+        "clue.forensic.sleeping_pill"
+      ],
+      "smallClues": [
+        "clue.small.weather",
+        "clue.small.building_access",
+        "clue.small.usual_quietness"
+      ]
+    },
+    "deception": {
+      "allowed": false
+    },
+    "lies": [],
+    "stateChanges": []
+  },
+  {
+    "id": "npc.friend.suji",
+    "displayName": "이수진",
+    "role": "witness",
+    "persona": "피해자의 절친. 슬픔에 잠겨있지만 진실을 밝히고 싶어한다.",
+    "personality": {
+      "traits": ["grieving", "honest", "protective", "emotional"],
+      "speechPattern": "casual_polite",
+      "emotionalRange": ["sad", "angry", "determined"]
+    },
+    "knowledge": {
+      "knows": [
+        "clue.victim.profile",
+        "clue.victim.wine_preference",
+        "clue.relationship.past",
+        "clue.motive.breakup",
+        "clue.victim.insurance_beneficiary",
+        "clue.victim.no_alcohol_habit"
+      ],
+      "ignores": [
+        "clue.suspect.prescription",
+        "clue.forensic.sleeping_pill",
+        "clue.cctv.station_2315"
+      ],
+      "smallClues": [
+        "clue.small.victim_personality",
+        "clue.small.breakup_timing",
+        "clue.small.financial_stress"
+      ]
+    },
+    "deception": {
+      "allowed": false
+    },
+    "lies": [],
+    "stateChanges": []
   }
 ]

@@ -2,7 +2,15 @@
  * 플레이어 발화 → 컨텍스트 구성 → LLM 호출(tools) → 검증 → 세션 반영 → JSON 반환
  * 실패해도 항상 200 + NpcReplyV1 폴백으로 응답하여 UX가 끊기지 않도록 보호
  */
-import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Logger,
+  Param,
+  Post,
+  Get,
+  Query,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
 import { SessionsService } from '../sessions/sessions.service';
@@ -13,6 +21,7 @@ import { ensureNpcReply } from '../ai/validate';
 import type { NpcReplyV1 } from '../ai/schema';
 import { INTENT_FALLBACK } from '../ai/schema';
 import { LRU, makeKey } from '../ai/cache';
+import { computeDramaticChoices } from '../ai/choices';
 
 const replyCache = new LRU<NpcReplyV1>(200);
 const API_VERSION = '2025-08-30' as const;
@@ -52,10 +61,20 @@ function makeFallback(params: {
   message?: string;
   npcName?: string;
   npcRole?: string;
+  choicesHint?: { id: string; label: string; hint?: string }[]; // ✅ 선택지(조건부)
 }): NpcReplyV1 {
-  const { sessionId, npcId, node, flags, message, npcName, npcRole } = params;
+  const {
+    sessionId,
+    npcId,
+    node,
+    flags,
+    message,
+    npcName,
+    npcRole,
+    choicesHint,
+  } = params;
 
-  return {
+  const base: NpcReplyV1 = {
     api_version: API_VERSION,
     schema_version: SCHEMA_VERSION,
     session_id: sessionId,
@@ -76,6 +95,11 @@ function makeFallback(params: {
       flags: [...(flags ?? [])],
     },
   };
+
+  // ✅ any 멤버접근 없이 안전하게 병합
+  return choicesHint && choicesHint.length > 0
+    ? { ...base, choices: choicesHint }
+    : base;
 }
 
 @Controller()
@@ -99,12 +123,14 @@ export class MessagesController {
         message: '요청 형식이 올바르지 않습니다.',
       });
     }
-    const dto = body;
+    const dto: MessageDto = body;
     const userText =
       dto.text.length > 1_000 ? `${dto.text.slice(0, 1_000)}…` : dto.text;
 
     // 1) 세션 + 플레이어 로그
-    const session = await Promise.resolve(this.sessions.getOrCreate(sessionId));
+    const session = await Promise.resolve(
+      this.sessions.getOrCreate(sessionId, dto.caseId),
+    );
     await Promise.resolve(
       this.sessions.append(sessionId, { from: 'player', text: userText }),
     ).catch((e) =>
@@ -133,9 +159,13 @@ export class MessagesController {
         node: nodeForFallback,
         flags: flagsForFallback,
         message: '해당 인물/상태를 찾을 수 없습니다.',
+        choicesHint: computeDramaticChoices({
+          node: nodeForFallback,
+          flags: flagsForFallback,
+        }),
       });
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }),
+        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
       ).catch(() => void 0);
       return fb;
     }
@@ -151,7 +181,11 @@ export class MessagesController {
     const cached = replyCache.get(cacheKey);
     if (cached) {
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: cached.reply }),
+        this.sessions.append(
+          sessionId,
+          { from: 'npc', text: cached.reply },
+          cached,
+        ),
       ).catch(() => void 0);
       return cached;
     }
@@ -167,8 +201,16 @@ export class MessagesController {
       // 5-1) 원본을 스키마로 1차 검증
       const base = ensureNpcReply(raw);
 
-      // 5-2) 허용된 키만 복사(추가 필드 제거) + 메타 보강
-      const json: NpcReplyV1 = {
+      // 5-2) 드라마틱 선택지(모델이 안 줬을 때만 제공)
+      const dramatic = computeDramaticChoices({
+        node: base.state?.node ?? ctx.npc.node,
+        flags: base.state?.flags ?? ctx.npc.flags,
+      });
+
+      // 5-3) 허용된 키만 복사(추가 필드 제거) + 메타 보강
+      const mergedChoices = base.choices ?? dramatic;
+
+      const replyObj: NpcReplyV1 = {
         api_version: API_VERSION,
         schema_version: SCHEMA_VERSION,
         session_id: sessionId,
@@ -180,21 +222,25 @@ export class MessagesController {
         confidence: base.confidence,
         facts_used: base.facts_used ?? [],
         state: base.state,
-        ...(base.choices ? { choices: base.choices } : null),
+        ...(mergedChoices ? { choices: mergedChoices } : {}), // ✅ 타입 안전
       };
 
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: json.reply }),
+        this.sessions.append(
+          sessionId,
+          { from: 'npc', text: replyObj.reply },
+          replyObj,
+        ),
       ).catch(() => void 0);
 
-      if (json.state?.node) {
+      if (replyObj.state?.node) {
         await Promise.resolve(
-          this.sessions.setState(sessionId, json.state),
+          this.sessions.setState(sessionId, replyObj.state),
         ).catch(() => void 0);
       }
 
-      replyCache.set(cacheKey, json);
-      return json;
+      replyCache.set(cacheKey, replyObj);
+      return replyObj;
     } catch (e) {
       this.logger.error(`LLM/validate failed: ${toLogMessage(e)}`);
       const fb = makeFallback({
@@ -205,11 +251,32 @@ export class MessagesController {
         flags: flagsForFallback,
         npcName: ctx?.npc?.name,
         npcRole: ctx?.npc?.role,
+        choicesHint: computeDramaticChoices({
+          node: nodeForFallback,
+          flags: flagsForFallback,
+        }),
       });
       await Promise.resolve(
-        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }),
+        this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
       ).catch(() => void 0);
       return fb;
     }
+  }
+
+  // 타임라인 유지
+  @Get('/sessions/:id/timeline')
+  async timeline(
+    @Param('id') sessionId: string,
+    @Query('limit') limit?: string,
+  ): Promise<{
+    sessionId: string;
+    items: Array<{ at: string; from: 'player' | 'npc'; text: string }>;
+  }> {
+    const n = Math.min(Math.max(Number(limit ?? '50'), 1), 200);
+    const items = await this.sessions.listTimeline(sessionId, n);
+    return {
+      sessionId,
+      items: items.map((i) => ({ ...i, at: i.at.toISOString() })),
+    };
   }
 }

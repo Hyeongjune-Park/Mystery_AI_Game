@@ -1,34 +1,33 @@
-// 프런트에서 직접 메시지만 전송 (세션ID는 클라이언트가 생성/보관)
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+// apps/web/src/lib/api.ts
+/**
+ * 클라이언트는 무조건 상대경로 '/api/proxy/*'만 사용.
+ * 실제 백엔드 위치는 서버에서 route.ts가 환경변수로 해석해 연결.
+ */
 
-export type SendPayload = {
-  caseId: string;
-  npcId: string;
-  text: string;
+type SendMessageDto = { caseId: string; npcId: string; text: string };
+
+export type NpcReplyLite = {
+  reply: string;
+  state?: { node?: string; flags?: string[] };
+  choices?: { id: string; text: string }[]; // ✅ 드라마틱 선택지(조건부)
 };
 
-export type NpcReply = {
-  reply: string;           // ← 백엔드가 반환하는 필드명은 reply
-  [k: string]: unknown;
-};
-
-export async function sendMessage(
-  sessionId: string,
-  payload: SendPayload
-): Promise<NpcReply> {
-  const r = await fetch(`${BASE}/sessions/${encodeURIComponent(sessionId)}/message`, {
+export async function sendMessage(sessionId: string, dto: SendMessageDto) {
+  const res = await fetch(`/api/proxy/sessions/${encodeURIComponent(sessionId)}/message`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dto),
+    cache: "no-store",
   });
-  if (!r.ok) {
-    const msg = await r.text().catch(() => r.statusText);
-    throw new Error(`sendMessage failed: ${r.status} ${msg}`);
-  }
-  return (await r.json()) as NpcReply;
+  if (!res.ok) throw new Error(`sendMessage failed: ${res.status}`);
+  return (await res.json()) as NpcReplyLite;
 }
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3001';
+export async function fetchTimeline(sessionId: string, limit = 100) {
+  const res = await fetch(`/api/proxy/sessions/${encodeURIComponent(sessionId)}/timeline?limit=${limit}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchTimeline failed: ${res.status}`);
+  return await res.json();
+}

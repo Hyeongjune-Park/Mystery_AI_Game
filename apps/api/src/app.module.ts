@@ -12,10 +12,14 @@ import { MessagesModule } from './messages/messages.module';
 // Prisma (DI)
 import { PrismaModule } from './prisma/prisma.module';
 
+// 케이스 데이터 라우트(/cases)
+import { CasesModule } from './cases/cases.module';
+
 @Module({
   imports: [
     PrismaModule, // Prisma DI (현재는 미사용이지만 전역 제공)
     MessagesModule, // ✅ /sessions/:id/message 라우트 활성화
+    CasesModule, // ✅ /cases 라우트 활성화
   ],
   controllers: [
     AppController, // ✅ /health, /echo 활성화

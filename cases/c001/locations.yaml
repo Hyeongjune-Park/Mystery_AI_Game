@@ -1,0 +1,113 @@
+# 장소 인트로 화면 설정
+intro:
+  title: 주요 장소 안내
+  description: 사건과 관련된 장소들입니다. 각 장소를 조사하여 단서를 찾으세요.
+  tips:
+    - 각 장소의 오브젝트를 주의깊게 관찰하세요
+    - NPC와 대화할 때 장소와 관련된 질문을 하면 더 많은 정보를 얻을 수 있습니다
+    - 증거들 사이의 연관성을 찾는 것이 중요합니다
+    - 게임 중 언제든 장소 정보를 다시 확인할 수 있습니다
+
+# 장소 목록
+locations:
+  - id: location.crime_scene
+    name: 피해자의 집
+    floor: 4층
+    description: 5층 건물의 4층. 피해자가 살던 곳으로, 현장 조사가 이루어진 장소다.
+    objects:
+      - id: obj.wineglass
+        name: 와인잔
+        description: |
+          거실 테이블 위에 놓여있는 레드와인 잔.
+          와인이 절반 정도 남아있으며, 잔 가장자리에 립스틱 자국이 있다.
+          피해자는 평소 와인을 즐겨 마셨다고 한다.
+        hiddenClue: 지문 분석 결과 피해자의 것이 아닌 다른 사람의 지문이 검출됨
+        image: null  # 추후 이미지 경로
+
+      - id: obj.living_room
+        name: 거실
+        description: |
+          깔끔하게 정리된 거실. 소파, 테이블, TV가 있으며
+          아무런 흔적도 보이지 않는다. 투쟁의 흔적은 전혀 없다.
+        hiddenClue: 지나치게 깔끔함 - 범죄 현장 은폐 가능성
+        image: null
+
+      - id: obj.suicide_note
+        name: 유서
+        description: |
+          "더 이상 살고 싶지 않습니다. 모든 것이 너무 힘듭니다."
+
+          피해자의 책상 위에서 발견된 손으로 쓴 유서.
+          A4 용지에 검은색 볼펜으로 작성되어 있다.
+        hiddenClue: 필적 분석 필요 - 평소 피해자의 필체와 미묘하게 다름
+        image: null
+
+  - id: location.rooftop
+    name: 건물 옥상
+    floor: 5층
+    description: 피해자가 추락한 것으로 추정되는 장소. 출입문에 접근 기록이 남아있다.
+    objects:
+      - id: obj.rooftop_door
+        name: 출입문
+        description: |
+          옥상으로 통하는 철제 문. 카드키로 개폐되며,
+          출입 기록이 자동으로 저장된다.
+        hiddenClue: 사건 당일 23시 10분 개폐 기록 존재 - 피해자 외 1명 더 출입
+        image: null
+
+      - id: obj.railing
+        name: 난간
+        description: |
+          옥상 가장자리의 안전 난간. 높이는 약 1.2m로
+          성인이 실수로 넘어가기는 어려운 높이다.
+        hiddenClue: 난간 높이상 단순 추락 가능성 낮음 - 타살 가능성 시사
+        image: null
+
+      - id: obj.rooftop_floor
+        name: 바닥
+        description: |
+          콘크리트 바닥. 별다른 특이사항은 없어 보인다.
+        hiddenClue: 미세한 흙 자국 발견 - 누군가 최근 이곳에 있었던 흔적
+        image: null
+
+  - id: location.station
+    name: 지하철역
+    floor: 지하 1층
+    description: 피해자의 집에서 도보 5분 거리. CCTV 영상이 보관되어 있다.
+    objects:
+      - id: obj.cctv
+        name: CCTV
+        description: |
+          역 내부를 촬영하는 감시 카메라.
+          모든 영상은 30일간 보관된다.
+        hiddenClue: 23시 15분 영상에 용의자와 비슷한 체격의 인물 포착
+        image: null
+
+      - id: obj.turnstile
+        name: 개찰구
+        description: |
+          교통카드로 통과하는 자동 개찰구.
+          모든 교통카드 사용 기록이 저장된다.
+        hiddenClue: 용의자의 카드 사용 기록과 진술의 불일치 발견 가능
+        image: null
+
+  - id: location.police_station
+    name: 경찰서
+    floor: 1층
+    description: 사건을 담당하는 경찰서. 증거 자료와 부검 결과가 보관되어 있다.
+    objects:
+      - id: obj.evidence_locker
+        name: 증거 보관소
+        description: |
+          현장에서 수집된 증거물들이 보관되어 있다.
+          와인잔, 유서, 의류 등이 봉인된 상태로 보관 중이다.
+        hiddenClue: 증거물 간 교차 분석 시 모순점 발견 가능
+        image: null
+
+      - id: obj.autopsy_report
+        name: 부검 보고서
+        description: |
+          피해자의 부검 결과 보고서.
+          사망 시각, 사인, 체내 물질 검사 결과 등이 기록되어 있다.
+        hiddenClue: 혈액에서 수면제 성분 검출 - 자살 전 복용했거나 누군가 먹였을 가능성
+        image: null

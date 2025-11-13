@@ -1,28 +1,41 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { fetchCaseMetadata, CaseMetadata } from "@/lib/api";
+
 interface GameIntroProps {
   caseId: string;
   onStart: () => void;
 }
 
 export default function GameIntro({ caseId, onStart }: GameIntroProps) {
-  // 케이스 정보 (나중에 API에서 가져올 수 있음)
-  const caseInfo = {
-    c001: {
-      title: "와인잔의 비밀",
-      subtitle: "The Secret of the Wine Glass",
-      synopsis: "유명 와인 소믈리에가 자택에서 추락사한 사건. 경찰은 자살로 결론내렸지만, 현장에는 의문점이 남아있다.",
-      difficulty: "Normal",
-    },
-  };
+  const [caseInfo, setCaseInfo] = useState<CaseMetadata | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const info = caseInfo[caseId as keyof typeof caseInfo];
+  useEffect(() => {
+    fetchCaseMetadata(caseId)
+      .then(setCaseInfo)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [caseId]);
 
-  if (!info) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !caseInfo) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-white text-center">
           <p className="text-xl">케이스를 찾을 수 없습니다.</p>
+          {error && <p className="text-sm text-slate-400 mt-2">{error}</p>}
         </div>
       </div>
     );
@@ -41,10 +54,10 @@ export default function GameIntro({ caseId, onStart }: GameIntroProps) {
         {/* Logo / Title Area */}
         <div className="space-y-4">
           <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 tracking-tight">
-            {info.title}
+            {caseInfo.title}
           </h1>
           <p className="text-lg text-slate-400 font-light tracking-wide">
-            {info.subtitle}
+            {caseInfo.subtitle}
           </p>
         </div>
 
@@ -60,7 +73,7 @@ export default function GameIntro({ caseId, onStart }: GameIntroProps) {
         {/* Synopsis */}
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 backdrop-blur">
           <p className="text-slate-300 leading-relaxed">
-            {info.synopsis}
+            {caseInfo.synopsis}
           </p>
         </div>
 
@@ -70,13 +83,13 @@ export default function GameIntro({ caseId, onStart }: GameIntroProps) {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>난이도: {info.difficulty}</span>
+            <span>난이도: {caseInfo.difficulty}</span>
           </div>
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>예상 플레이 시간: 30분</span>
+            <span>예상 플레이 시간: {caseInfo.estimatedMinutes}분</span>
           </div>
         </div>
 

@@ -1,50 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { fetchNpcsIntro, NpcsIntroData } from "@/lib/api";
+
 interface NpcIntroProps {
   caseId: string;
   onNext: () => void;
 }
 
 export default function NpcIntro({ caseId, onNext }: NpcIntroProps) {
-  // NPC 정보 (나중에 npcs.json에서 가져올 수 있음)
-  const npcs = {
-    c001: [
-      {
-        id: "npc.detective.doil",
-        name: "도일 형사",
-        age: 42,
-        role: "수사 담당 형사",
-        description: "이번 사건을 담당하는 베테랑 형사. 냉철하고 논리적이다.",
-        specialty: "범죄 현장 분석",
-      },
-      {
-        id: "npc.suspect.minseo",
-        name: "박민서",
-        age: 32,
-        role: "피해자의 전 연인",
-        description: "피해자와 2주 전 결별했다. 겉으로는 침착하지만 불안해 보인다.",
-        specialty: "바리스타",
-      },
-      {
-        id: "npc.witness.neighbor",
-        name: "이웃 주민",
-        age: 55,
-        role: "목격자",
-        description: "피해자가 살던 건물의 이웃. 사건 당일 밤 이상한 소리를 들었다고 증언했다.",
-        specialty: "관찰력 좋음",
-      },
-      {
-        id: "npc.friend.suji",
-        name: "이수진",
-        age: 34,
-        role: "피해자의 절친",
-        description: "피해자와 10년 지기 친구. 피해자의 생활 습관을 잘 알고 있다.",
-        specialty: "패션 디자이너",
-      },
-    ],
-  };
+  const [data, setData] = useState<NpcsIntroData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const npcList = npcs[caseId as keyof typeof npcs] || [];
+  useEffect(() => {
+    fetchNpcsIntro(caseId)
+      .then(setData)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [caseId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">NPC 정보를 불러올 수 없습니다.</p>
+          {error && <p className="text-sm text-slate-400 mt-2">{error}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12 px-4">
@@ -52,16 +47,16 @@ export default function NpcIntro({ caseId, onNext }: NpcIntroProps) {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 mb-4">
-            주요 인물 소개
+            {data.intro.title}
           </h1>
           <p className="text-slate-400 text-lg">
-            사건과 관련된 인물들입니다. 각 인물과 대화하여 단서를 수집하세요.
+            {data.intro.description}
           </p>
         </div>
 
         {/* NPC Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {npcList.map((npc, index) => (
+          {data.npcs.map((npc, index) => (
             <div
               key={npc.id}
               className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 backdrop-blur hover:border-amber-500/30 transition-all duration-300 animate-fade-in"
@@ -115,10 +110,9 @@ export default function NpcIntro({ caseId, onNext }: NpcIntroProps) {
                 <strong className="text-amber-400">주의사항:</strong>
               </p>
               <ul className="space-y-1 list-disc list-inside">
-                <li>각 인물은 자신이 아는 정보만 제공할 수 있습니다</li>
-                <li>일부 인물은 거짓말을 할 수 있습니다</li>
-                <li>증거를 제시하면 숨긴 정보를 얻을 수 있습니다</li>
-                <li>게임 중 언제든 인물 정보를 다시 확인할 수 있습니다</li>
+                {data.intro.tips.map((tip, index) => (
+                  <li key={index}>{tip}</li>
+                ))}
               </ul>
             </div>
           </div>

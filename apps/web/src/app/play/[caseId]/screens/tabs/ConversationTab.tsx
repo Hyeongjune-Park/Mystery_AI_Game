@@ -18,15 +18,28 @@ interface Message {
 
 interface ConversationTabProps {
   caseId: string;
+  npcSessions: Record<string, string>;
+  setNpcSessions: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  npcMessages: Record<string, Message[]>;
+  setNpcMessages: React.Dispatch<React.SetStateAction<Record<string, Message[]>>>;
 }
 
-export default function ConversationTab({ caseId }: ConversationTabProps) {
+export default function ConversationTab({
+  caseId,
+  npcSessions,
+  setNpcSessions,
+  npcMessages,
+  setNpcMessages,
+}: ConversationTabProps) {
   const [selectedNpc, setSelectedNpc] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 현재 선택된 NPC의 세션 ID
+  const sessionId = selectedNpc ? npcSessions[selectedNpc] : null;
 
   // NPC 목록
   const npcs: NpcOption[] = [
@@ -43,31 +56,77 @@ export default function ConversationTab({ caseId }: ConversationTabProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // NPC 선택 시 세션 생성 (초기 메시지 없음)
+  // NPC 선택 시 세션 생성 또는 기존 세션 불러오기
   const handleSelectNpc = async (npcId: string) => {
     setSelectedNpc(npcId);
+
+    // 이미 해당 NPC와의 세션이 있는 경우
+    if (npcSessions[npcId]) {
+      console.log("[ConversationTab] Loading existing session for NPC:", npcId);
+      // 저장된 메시지 불러오기
+      setMessages(npcMessages[npcId] || []);
+
+      // 서버에서 타임라인 동기화
+      try {
+        const timeline = await fetch(`/api/proxy/sessions/${npcSessions[npcId]}/timeline?limit=100`).then(r => r.json());
+        const loadedMessages: Message[] = timeline.items.map((item: any, index: number) => ({
+          id: `${Date.now()}_${index}`,
+          sender: item.from === "player" ? "user" : "npc",
+          text: item.text,
+          timestamp: new Date(item.at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
+        }));
+        setMessages(loadedMessages);
+        setNpcMessages(prev => ({ ...prev, [npcId]: loadedMessages }));
+      } catch (error) {
+        console.error("[ConversationTab] Failed to load timeline:", error);
+      }
+      return;
+    }
+
+    // 새 세션 생성
     setMessages([]); // 빈 상태로 시작
 
-    // 세션 생성
     try {
+      console.log("[ConversationTab] Creating new session for NPC:", npcId);
       const res = await fetch(`/api/proxy/sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ caseId, playerId: "web-player" }),
       });
 
+      console.log("[ConversationTab] Session response status:", res.status);
+
       if (res.ok) {
         const session = await res.json();
-        setSessionId(session.id);
+        console.log("[ConversationTab] Session created:", session);
+
+        // NPC별로 세션 저장
+        setNpcSessions(prev => ({ ...prev, [npcId]: session.sessionId }));
+        setNpcMessages(prev => ({ ...prev, [npcId]: [] }));
+      } else {
+        console.error("[ConversationTab] Session creation failed:", res.status, await res.text());
       }
     } catch (error) {
-      console.error("Failed to create session:", error);
+      console.error("[ConversationTab] Failed to create session:", error);
     }
   };
 
   // 메시지 전송 (실제 API 연동)
   const handleSendMessage = async () => {
-    if (!inputText.trim() || !selectedNpcInfo || !sessionId) return;
+    console.log("[ConversationTab] handleSendMessage called", {
+      inputText: inputText.trim(),
+      selectedNpcInfo,
+      sessionId
+    });
+
+    if (!inputText.trim() || !selectedNpcInfo || !sessionId) {
+      console.warn("[ConversationTab] Message send blocked:", {
+        hasInput: !!inputText.trim(),
+        hasNpc: !!selectedNpcInfo,
+        hasSession: !!sessionId
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -76,7 +135,14 @@ export default function ConversationTab({ caseId }: ConversationTabProps) {
       timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+
+    // NPC별 메시지도 업데이트
+    if (selectedNpcInfo) {
+      setNpcMessages(prev => ({ ...prev, [selectedNpcInfo.id]: updatedMessages }));
+    }
+
     const messageText = inputText;
     setInputText("");
     setIsTyping(true);
@@ -96,7 +162,13 @@ export default function ConversationTab({ caseId }: ConversationTabProps) {
         timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
       };
 
-      setMessages((prev) => [...prev, npcMessage]);
+      const finalMessages = [...updatedMessages, npcMessage];
+      setMessages(finalMessages);
+
+      // NPC별 메시지도 업데이트
+      if (selectedNpcInfo) {
+        setNpcMessages(prev => ({ ...prev, [selectedNpcInfo.id]: finalMessages }));
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
 
@@ -107,7 +179,14 @@ export default function ConversationTab({ caseId }: ConversationTabProps) {
         text: "죄송합니다. 메시지 전송 중 오류가 발생했습니다. 다시 시도해 주세요.",
         timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+
+      const errorMessages = [...messages, userMessage, errorMessage];
+      setMessages(errorMessages);
+
+      // NPC별 메시지도 업데이트
+      if (selectedNpcInfo) {
+        setNpcMessages(prev => ({ ...prev, [selectedNpcInfo.id]: errorMessages }));
+      }
     } finally {
       setIsTyping(false);
     }

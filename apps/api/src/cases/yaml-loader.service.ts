@@ -156,6 +156,32 @@ export class YamlLoaderService {
   }
 
   /**
+   * NPC 상세 데이터 로드 (npcs.json)
+   * 최대 15명의 NPC 지원
+   */
+  loadNpcsData(caseId: string): any[] {
+    const jsonPath = path.join(this.casesPath, caseId, 'npcs.json');
+    try {
+      const fileContents = fs.readFileSync(jsonPath, 'utf8');
+      const npcs = JSON.parse(fileContents);
+
+      if (!Array.isArray(npcs)) {
+        throw new Error('npcs.json must be an array');
+      }
+
+      if (npcs.length > 15) {
+        this.logger.warn(`Case ${caseId} has ${npcs.length} NPCs, limiting to 15`);
+        return npcs.slice(0, 15);
+      }
+
+      return npcs;
+    } catch (error) {
+      this.logger.error(`Failed to load NPCs for case ${caseId}`, error);
+      return [];
+    }
+  }
+
+  /**
    * 케이스 존재 여부 확인
    */
   caseExists(caseId: string): boolean {

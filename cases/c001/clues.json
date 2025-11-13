@@ -125,19 +125,8 @@
     "description": "피해자의 혈액에서 수면제 성분(졸피뎀) 검출. 치사량은 아니지만 의식을 잃기에 충분한 양.",
     "importance": 1.0,
     "solution_critical": true,
-    "autoReveal": false,
-    "revealCondition": {
-      "mode": "conversational",
-      "triggers": [
-        {
-          "type": "keyword_cluster",
-          "keywords": ["부검", "혈액", "검사", "약물", "독극물"],
-          "minKeywords": 2,
-          "contextRequired": "forensic_inquiry"
-        }
-      ],
-      "npcKnowledge": ["npc.detective.doil"]
-    },
+    "autoReveal": true,
+    "revealCondition": null,
     "supports": ["clue.suspect.prescription"],
     "contradicts": []
   },
@@ -149,24 +138,8 @@
     "description": "박민서는 3개월 전부터 불면증으로 졸피뎀을 처방받아 복용 중이었음.",
     "importance": 0.85,
     "solution_critical": true,
-    "autoReveal": false,
-    "revealCondition": {
-      "mode": "conversational",
-      "triggers": [
-        {
-          "type": "evidence_based",
-          "requiredClues": ["clue.forensic.sleeping_pill"],
-          "playerMustMention": ["수면제", "처방", "누구", "복용"]
-        },
-        {
-          "type": "keyword_cluster",
-          "keywords": ["박민서", "약", "처방", "병원", "수면제"],
-          "minKeywords": 3,
-          "contextRequired": "suspect_investigation"
-        }
-      ],
-      "npcKnowledge": ["npc.detective.doil"]
-    },
+    "autoReveal": true,
+    "revealCondition": null,
     "supports": ["clue.method.drugged_wine"],
     "contradicts": []
   },
@@ -178,19 +151,8 @@
     "description": "사건 당일 23시 15분, 피해자 집에서 도보 5분 거리의 지하철역 CCTV에 박민서가 포착됨.",
     "importance": 0.9,
     "solution_critical": true,
-    "autoReveal": false,
-    "revealCondition": {
-      "mode": "conversational",
-      "triggers": [
-        {
-          "type": "keyword_cluster",
-          "keywords": ["CCTV", "영상", "카메라", "목격", "역"],
-          "minKeywords": 2,
-          "contextRequired": "evidence_request"
-        }
-      ],
-      "npcKnowledge": ["npc.detective.doil"]
-    },
+    "autoReveal": true,
+    "revealCondition": null,
     "supports": ["clue.suspect.was_near_scene"],
     "contradicts": ["clue.suspect.alibi_home"]
   },
@@ -419,19 +381,8 @@
     "description": "건물 옥상 출입문에 남아있는 지문 분석 결과, 박민서의 지문이 검출됨. 시간대는 확인 불가.",
     "importance": 0.85,
     "solution_critical": true,
-    "autoReveal": false,
-    "revealCondition": {
-      "mode": "conversational",
-      "triggers": [
-        {
-          "type": "keyword_cluster",
-          "keywords": ["옥상", "지붕", "추락", "어디서"],
-          "minKeywords": 2,
-          "contextRequired": "crime_scene_detail"
-        }
-      ],
-      "npcKnowledge": ["npc.detective.doil"]
-    },
+    "autoReveal": true,
+    "revealCondition": null,
     "supports": ["clue.method.pushed_from_rooftop"],
     "contradicts": []
   },

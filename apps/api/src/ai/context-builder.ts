@@ -1,15 +1,11 @@
 /**
  * apps/api/src/ai/context-builder.ts
  * - 세션/케이스 상태를 모아 LLM에 줄 컨텍스트를 구성
- * - 비동기 아님(require-await 방지)
- * - 정확한 타입으로 no-unsafe-* 방지
+ * - NPC 데이터는 JSON 파일에서 동적으로 로드 (최대 15명)
  */
-import {
-  Cases,
-  type CaseDef,
-  type NpcDef,
-  type Evidence,
-} from '../cases/memory';
+import { Cases, type CaseDef, type Evidence } from '../cases/memory';
+import * as fs from 'fs';
+import * as path from 'path';
 
 type SessionLike = {
   state?: { node?: string; flags?: string[] };
@@ -32,6 +28,32 @@ export type BuiltContext = {
   lastTurns: Array<{ from: 'player' | 'npc'; text: string }>;
 };
 
+/**
+ * NPC 데이터를 JSON 파일에서 로드
+ */
+function loadNpcData(caseId: string, npcId: string): any {
+  const casesPath = path.join(process.cwd(), '..', '..', 'cases');
+  const npcsJsonPath = path.join(casesPath, caseId, 'npcs.json');
+
+  try {
+    const fileContents = fs.readFileSync(npcsJsonPath, 'utf8');
+    const npcs = JSON.parse(fileContents);
+
+    if (!Array.isArray(npcs)) {
+      throw new Error('npcs.json must be an array');
+    }
+
+    const npc = npcs.find((n) => n.id === npcId);
+    if (!npc) {
+      throw new Error(`NPC ${npcId} not found in npcs.json`);
+    }
+
+    return npc;
+  } catch (error) {
+    throw new Error(`Failed to load NPC data: ${error}`);
+  }
+}
+
 export function buildContext({
   caseId,
   npcId,
@@ -44,10 +66,12 @@ export function buildContext({
   const c: CaseDef | undefined = Cases[caseId];
   if (!c) throw new Error(`Unknown caseId: ${caseId}`);
 
-  const npcRaw: NpcDef | undefined = c.npcs[npcId];
-  if (!npcRaw) throw new Error(`Unknown npcId: ${npcId}`);
+  // ✅ NPC 데이터를 JSON 파일에서 동적으로 로드
+  const npcData = loadNpcData(caseId, npcId);
 
-  const node = session.state?.node ?? npcRaw.stateMachine.start;
+  // 기본 node는 'initial' (npcs.json에 stateMachine이 없을 수 있음)
+  const defaultNode = 'initial';
+  const node = session.state?.node ?? defaultNode;
   const flags = session.state?.flags ?? [];
   const lastTurns = (session.logs ?? []).slice(-6);
 
@@ -58,9 +82,9 @@ export function buildContext({
     evidence: c.evidence,
     npc: {
       id: npcId,
-      name: npcRaw.name,
-      role: npcRaw.role,
-      persona: npcRaw.persona,
+      name: npcData.displayName || npcData.name,
+      role: npcData.role,
+      persona: npcData.persona,
       node,
       flags,
     },

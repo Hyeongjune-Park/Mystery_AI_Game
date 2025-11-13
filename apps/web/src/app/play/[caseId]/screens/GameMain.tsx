@@ -13,8 +13,19 @@ interface GameMainProps {
 
 type TabType = "npcs" | "locations" | "conversation" | "notes" | "report";
 
+interface Message {
+  id: string;
+  sender: "user" | "npc";
+  text: string;
+  timestamp: string;
+}
+
 export default function GameMain({ caseId }: GameMainProps) {
   const [activeTab, setActiveTab] = useState<TabType>("npcs");
+
+  // 대화 탭 상태를 GameMain에서 관리 (탭 전환 시에도 유지)
+  const [npcSessions, setNpcSessions] = useState<Record<string, string>>({});
+  const [npcMessages, setNpcMessages] = useState<Record<string, Message[]>>({});
 
   const tabs = [
     {
@@ -118,7 +129,15 @@ export default function GameMain({ caseId }: GameMainProps) {
 
           {activeTab === "locations" && <LocationsTab caseId={caseId} />}
 
-          {activeTab === "conversation" && <ConversationTab caseId={caseId} />}
+          {activeTab === "conversation" && (
+            <ConversationTab
+              caseId={caseId}
+              npcSessions={npcSessions}
+              setNpcSessions={setNpcSessions}
+              npcMessages={npcMessages}
+              setNpcMessages={setNpcMessages}
+            />
+          )}
 
           {activeTab === "notes" && <NotesTab caseId={caseId} />}
 

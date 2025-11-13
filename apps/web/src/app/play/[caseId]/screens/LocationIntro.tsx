@@ -1,60 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { fetchLocations, LocationsData } from "@/lib/api";
+
 interface LocationIntroProps {
   caseId: string;
   onNext: () => void;
 }
 
 export default function LocationIntro({ caseId, onNext }: LocationIntroProps) {
-  // 장소 정보 (나중에 케이스 데이터에서 가져올 수 있음)
-  const locations = {
-    c001: [
-      {
-        id: "location.crime_scene",
-        name: "피해자의 집",
-        floor: "4층",
-        description: "5층 건물의 4층. 피해자가 살던 곳으로, 현장 조사가 이루어진 장소다.",
-        objects: [
-          { name: "와인잔", clue: "지문이 남아있음" },
-          { name: "거실", clue: "정리정돈이 잘 되어 있음" },
-          { name: "유서", clue: "필적 분석 필요" },
-        ],
-      },
-      {
-        id: "location.rooftop",
-        name: "건물 옥상",
-        floor: "5층",
-        description: "피해자가 추락한 것으로 추정되는 장소. 출입문에 접근 기록이 남아있다.",
-        objects: [
-          { name: "출입문", clue: "지문 채취 가능" },
-          { name: "난간", clue: "높이 약 1.2m" },
-          { name: "바닥", clue: "특이사항 없음" },
-        ],
-      },
-      {
-        id: "location.station",
-        name: "지하철역",
-        floor: "지하 1층",
-        description: "피해자의 집에서 도보 5분 거리. CCTV 영상이 보관되어 있다.",
-        objects: [
-          { name: "CCTV", clue: "23시 15분 녹화본 존재" },
-          { name: "개찰구", clue: "교통카드 기록 조회 가능" },
-        ],
-      },
-      {
-        id: "location.police_station",
-        name: "경찰서",
-        floor: "1층",
-        description: "사건을 담당하는 경찰서. 증거 자료와 부검 결과가 보관되어 있다.",
-        objects: [
-          { name: "증거 보관소", clue: "수집된 증거 열람 가능" },
-          { name: "부검 보고서", clue: "혈액 검사 결과 포함" },
-        ],
-      },
-    ],
-  };
+  const [data, setData] = useState<LocationsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const locationList = locations[caseId as keyof typeof locations] || [];
+  useEffect(() => {
+    fetchLocations(caseId)
+      .then(setData)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [caseId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">장소 정보를 불러올 수 없습니다.</p>
+          {error && <p className="text-sm text-slate-400 mt-2">{error}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12 px-4">
@@ -62,16 +47,16 @@ export default function LocationIntro({ caseId, onNext }: LocationIntroProps) {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 mb-4">
-            주요 장소 안내
+            {data.intro.title}
           </h1>
           <p className="text-slate-400 text-lg">
-            사건과 관련된 장소들입니다. 각 장소를 조사하여 단서를 찾으세요.
+            {data.intro.description}
           </p>
         </div>
 
         {/* Location Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {locationList.map((location, index) => (
+          {data.locations.map((location, index) => (
             <div
               key={location.id}
               className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden backdrop-blur hover:border-amber-500/30 transition-all duration-300 animate-fade-in"
@@ -108,12 +93,12 @@ export default function LocationIntro({ caseId, onNext }: LocationIntroProps) {
                     <span className="font-semibold">주요 오브젝트</span>
                   </div>
                   <div className="space-y-1.5">
-                    {location.objects.map((obj, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-sm">
+                    {location.objects.map((obj) => (
+                      <div key={obj.id} className="flex items-start gap-2 text-sm">
                         <span className="text-amber-500 mt-1">•</span>
                         <div className="flex-1">
                           <span className="text-slate-300 font-medium">{obj.name}</span>
-                          <span className="text-slate-500 ml-2">- {obj.clue}</span>
+                          <span className="text-slate-500 ml-2 text-xs">- 조사 가능</span>
                         </div>
                       </div>
                     ))}
@@ -135,10 +120,9 @@ export default function LocationIntro({ caseId, onNext }: LocationIntroProps) {
                 <strong className="text-amber-400">조사 팁:</strong>
               </p>
               <ul className="space-y-1 list-disc list-inside">
-                <li>각 장소의 오브젝트를 주의깊게 관찰하세요</li>
-                <li>NPC와 대화할 때 장소와 관련된 질문을 하면 더 많은 정보를 얻을 수 있습니다</li>
-                <li>증거들 사이의 연관성을 찾는 것이 중요합니다</li>
-                <li>게임 중 언제든 장소 정보를 다시 확인할 수 있습니다</li>
+                {data.intro.tips.map((tip, index) => (
+                  <li key={index}>{tip}</li>
+                ))}
               </ul>
             </div>
           </div>

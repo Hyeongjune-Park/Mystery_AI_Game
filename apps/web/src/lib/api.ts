@@ -31,3 +31,100 @@ export async function fetchTimeline(sessionId: string, limit = 100) {
   if (!res.ok) throw new Error(`fetchTimeline failed: ${res.status}`);
   return await res.json();
 }
+
+// ===== Case Data API =====
+
+export interface CaseMetadata {
+  id: string;
+  title: string;
+  subtitle: string;
+  synopsis: string;
+  difficulty: string;
+  estimatedMinutes: number;
+  screenFlow: string[];
+}
+
+export interface StoryPage {
+  title: string;
+  content: string;
+}
+
+export interface StoryData {
+  pages: StoryPage[];
+  skippable: boolean;
+}
+
+export interface LocationObject {
+  id: string;
+  name: string;
+  description: string;
+  hiddenClue: string;
+  image: string | null;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  floor: string;
+  description: string;
+  objects: LocationObject[];
+}
+
+export interface LocationsData {
+  intro: {
+    title: string;
+    description: string;
+    tips: string[];
+  };
+  locations: Location[];
+}
+
+export interface NpcIntro {
+  id: string;
+  name: string;
+  age: number;
+  role: string;
+  description: string;
+  specialty: string;
+}
+
+export interface NpcsIntroData {
+  intro: {
+    title: string;
+    description: string;
+    tips: string[];
+  };
+  npcs: NpcIntro[];
+}
+
+export async function fetchCaseMetadata(caseId: string): Promise<CaseMetadata> {
+  const res = await fetch(`/api/proxy/cases/${encodeURIComponent(caseId)}/metadata`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchCaseMetadata failed: ${res.status}`);
+  return await res.json();
+}
+
+export async function fetchStory(caseId: string): Promise<StoryData> {
+  const res = await fetch(`/api/proxy/cases/${encodeURIComponent(caseId)}/story`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchStory failed: ${res.status}`);
+  return await res.json();
+}
+
+export async function fetchLocations(caseId: string): Promise<LocationsData> {
+  const res = await fetch(`/api/proxy/cases/${encodeURIComponent(caseId)}/locations`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchLocations failed: ${res.status}`);
+  return await res.json();
+}
+
+export async function fetchNpcsIntro(caseId: string): Promise<NpcsIntroData> {
+  const res = await fetch(`/api/proxy/cases/${encodeURIComponent(caseId)}/npcs-intro`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchNpcsIntro failed: ${res.status}`);
+  return await res.json();
+}

@@ -1,0 +1,39 @@
+# NPC 인트로 화면 설정
+intro:
+  title: 주요 인물 소개
+  description: 사건과 관련된 인물들입니다. 각 인물과 대화하여 단서를 수집하세요.
+  tips:
+    - 각 인물은 자신이 아는 정보만 제공할 수 있습니다
+    - 일부 인물은 거짓말을 할 수 있습니다
+    - 증거를 제시하면 숨긴 정보를 얻을 수 있습니다
+    - 게임 중 언제든 인물 정보를 다시 확인할 수 있습니다
+
+# NPC 인트로 정보 (간단한 소개용)
+npcs:
+  - id: npc.detective.doil
+    name: 도일 형사
+    age: 42
+    role: 수사 담당 형사
+    description: 이번 사건을 담당하는 베테랑 형사. 냉철하고 논리적이다.
+    specialty: 범죄 현장 분석
+
+  - id: npc.suspect.minseo
+    name: 박민서
+    age: 32
+    role: 피해자의 전 연인
+    description: 피해자와 2주 전 결별했다. 겉으로는 침착하지만 불안해 보인다.
+    specialty: 바리스타
+
+  - id: npc.witness.neighbor
+    name: 이웃 주민
+    age: 55
+    role: 목격자
+    description: 피해자가 살던 건물의 이웃. 사건 당일 밤 이상한 소리를 들었다고 증언했다.
+    specialty: 관찰력 좋음
+
+  - id: npc.friend.suji
+    name: 이수진
+    age: 34
+    role: 피해자의 절친
+    description: 피해자와 10년 지기 친구. 피해자의 생활 습관을 잘 알고 있다.
+    specialty: 패션 디자이너

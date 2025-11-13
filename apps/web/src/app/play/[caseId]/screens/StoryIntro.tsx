@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchStory, StoryData } from "@/lib/api";
 
 interface StoryIntroProps {
   caseId: string;
@@ -9,47 +10,40 @@ interface StoryIntroProps {
 
 export default function StoryIntro({ caseId, onNext }: StoryIntroProps) {
   const [currentPage, setCurrentPage] = useState(0);
+  const [storyData, setStoryData] = useState<StoryData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 스토리 페이지들 (나중에 케이스 데이터에서 가져올 수 있음)
-  const storyPages = {
-    c001: [
-      {
-        title: "사건 발생",
-        content: `2025년 1월 14일 밤 11시 40분.
+  useEffect(() => {
+    fetchStory(caseId)
+      .then(setStoryData)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [caseId]);
 
-강남구 한 고급 주택가에서 유명 와인 소믈리에 김재현(35세)이 자택 건물 아래에서 숨진 채 발견되었다.
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
 
-경찰은 현장 조사 결과, 옥상에서 떨어진 것으로 추정하고 자살로 결론 내렸다.
+  if (error || !storyData) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl">스토리를 불러올 수 없습니다.</p>
+          {error && <p className="text-sm text-slate-400 mt-2">{error}</p>}
+        </div>
+      </div>
+    );
+  }
 
-현장에서는 '더 이상 살고 싶지 않습니다'라는 내용의 유서가 발견되었다.`,
-      },
-      {
-        title: "의문점",
-        content: `하지만 몇 가지 의문점이 남아있다.
-
-피해자는 평소 밝고 긍정적인 성격으로 알려져 있었으며, 최근 방송 출연까지 예정되어 있었다.
-
-또한 현장에서 발견된 와인잔과 피해자의 생활 습관 사이에 모순이 있다는 제보가 들어왔다.
-
-당신은 이 사건의 진실을 밝혀야 한다.`,
-      },
-      {
-        title: "당신의 임무",
-        content: `당신은 이 사건을 재조사하게 된 형사다.
-
-현장을 다시 살펴보고, 관련자들을 심문하여 진실을 밝혀내야 한다.
-
-과연 이것은 정말 자살일까?
-아니면 숨겨진 범인이 있는 것일까?
-
-모든 것은 당신의 추리에 달려있다.`,
-      },
-    ],
-  };
-
-  const pages = storyPages[caseId as keyof typeof storyPages] || [];
+  const pages = storyData.pages;
   const currentStory = pages[currentPage];
-
   const isLastPage = currentPage === pages.length - 1;
 
   const handleNext = () => {
@@ -65,16 +59,6 @@ export default function StoryIntro({ caseId, onNext }: StoryIntroProps) {
       setCurrentPage((prev) => prev - 1);
     }
   };
-
-  if (!currentStory) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-white text-center">
-          <p className="text-xl">스토리를 불러올 수 없습니다.</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-12">
@@ -147,14 +131,16 @@ export default function StoryIntro({ caseId, onNext }: StoryIntroProps) {
         </div>
 
         {/* Skip Button */}
-        <div className="text-center mt-6">
-          <button
-            onClick={onNext}
-            className="text-sm text-slate-500 hover:text-slate-400 transition-colors underline"
-          >
-            스토리 건너뛰기
-          </button>
-        </div>
+        {storyData.skippable && (
+          <div className="text-center mt-6">
+            <button
+              onClick={onNext}
+              className="text-sm text-slate-500 hover:text-slate-400 transition-colors underline"
+            >
+              스토리 건너뛰기
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

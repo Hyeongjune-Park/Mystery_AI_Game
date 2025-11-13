@@ -1,0 +1,42 @@
+# NPC 인트로 화면 설정
+
+intro:
+  title: 주요 인물 소개
+  description: 사건과 관련된 인물들입니다. 각 인물과 대화하여 단서를 수집하세요.
+  tips:
+    - 각 인물은 자신이 아는 정보만 제공할 수 있습니다
+    - 일부 인물은 거짓말을 할 수 있습니다
+    - 증거를 제시하면 숨긴 정보를 얻을 수 있습니다
+    - 게임 중 언제든 인물 정보를 다시 확인할 수 있습니다
+
+# NPC 인트로 정보 (간단한 소개용)
+# 최소 1명 이상의 NPC가 필요합니다
+npcs:
+  - id: npc.detective.example  # npcs.json의 ID와 일치해야 함
+    name: 형사 이름
+    age: 42
+    role: 수사 담당 형사
+    description: 이 인물에 대한 간단한 설명을 작성하세요.
+    specialty: 범죄 현장 분석
+
+  - id: npc.suspect.example
+    name: 용의자 이름
+    age: 32
+    role: 용의자
+    description: 용의자에 대한 설명을 작성하세요.
+    specialty: 직업
+
+  - id: npc.witness.example
+    name: 목격자 이름
+    age: 55
+    role: 목격자
+    description: 목격자에 대한 설명을 작성하세요.
+    specialty: 특징
+
+# NPC를 더 추가하려면 위의 형식을 복사해서 붙여넣으세요
+# - id: npc.another.person
+#   name: 다른 인물
+#   age: 28
+#   role: 역할
+#   description: 설명
+#   specialty: 특기

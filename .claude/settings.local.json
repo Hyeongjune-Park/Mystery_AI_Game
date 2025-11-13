@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm dev:api:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

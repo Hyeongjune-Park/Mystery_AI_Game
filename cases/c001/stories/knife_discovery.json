@@ -1,0 +1,18 @@
+{
+  "id": "knife_discovery",
+  "title": "증거 발견: 흉기",
+  "scenes": [
+    {
+      "image": "knife_discovery01.svg",
+      "caption": "서재 책상 서랍 깊숙한 곳에서 피 묻은 칼이 발견되었다."
+    },
+    {
+      "image": "knife_discovery02.svg",
+      "caption": "칼날에는 아직 마르지 않은 핏자국이... 이것이 흉기일까?"
+    },
+    {
+      "image": "knife_discovery03.svg",
+      "caption": "범인은 왜 흉기를 숨겼을까? 증거를 없애지 못한 이유가 있는 걸까?"
+    }
+  ]
+}

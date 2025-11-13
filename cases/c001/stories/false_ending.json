@@ -1,0 +1,18 @@
+{
+  "id": "false_ending",
+  "title": "엔딩: 미제",
+  "scenes": [
+    {
+      "image": "ending_false01.svg",
+      "caption": "증거가 충분하지 않았다."
+    },
+    {
+      "image": "ending_false02.svg",
+      "caption": "용의자는 석방되었고, 사건은 미제로 남게 되었다."
+    },
+    {
+      "image": "ending_false03.svg",
+      "caption": "어딘가에서 범인이 웃고 있을 것이다. 당신은 진실을 놓쳤다."
+    }
+  ]
+}

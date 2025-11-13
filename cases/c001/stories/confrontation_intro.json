@@ -1,0 +1,14 @@
+{
+  "id": "confrontation_intro",
+  "title": "국면 전환: 대치",
+  "scenes": [
+    {
+      "image": "confrontation01.svg",
+      "caption": "수집한 증거들이 한 사람을 가리키기 시작했다."
+    },
+    {
+      "image": "confrontation02.svg",
+      "caption": "이제 결정적인 질문을 던질 시간이다."
+    }
+  ]
+}

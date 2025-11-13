@@ -1,0 +1,151 @@
+# Game Flow Configuration for Case C001
+# 이 파일은 게임의 전체 흐름, 분기점, 조건부 이벤트를 관리합니다
+
+# 게임 시작 시 재생될 스토리
+gameStart:
+  story: "intro.json"
+
+# 게임 페이즈 정의
+phases:
+  - id: "investigation"
+    name: "초기 수사"
+    description: "현장을 조사하고 증거를 수집하는 단계"
+
+  - id: "gathering_clues"
+    name: "증거 수집"
+    description: "용의자들을 취조하고 증거를 연결하는 단계"
+
+  - id: "confrontation"
+    name: "범인 대치"
+    description: "결정적 증거로 범인을 추궁하는 단계"
+
+  - id: "conclusion"
+    name: "사건 종결"
+    description: "최종 보고서를 작성하고 결론을 내리는 단계"
+
+# 조건부 트리거 (게임 진행 중 특정 조건 만족 시 실행)
+triggers:
+  # 증거 발견 트리거
+  - id: "knife_found"
+    condition:
+      type: "clue_discovered"
+      clueId: "bloody_knife"
+    action:
+      type: "cutscene"
+      story: "knife_discovery.json"
+
+  # NPC 취조 트리거
+  - id: "lee_interrogated"
+    condition:
+      type: "npc_interrogated"
+      npcId: "lee_soohyun"
+      minMessages: 5
+    action:
+      type: "flag_set"
+      flag: "lee_interrogated"
+      value: true
+
+  # 모든 주요 증거 수집 완료 트리거
+  - id: "all_main_clues_found"
+    condition:
+      type: "clues_discovered"
+      clueIds: ["bloody_knife", "financial_records", "cctv_footage"]
+      operator: "all"
+    action:
+      type: "multiple"
+      actions:
+        - type: "phase_change"
+          nextPhase: "confrontation"
+        - type: "cutscene"
+          story: "confrontation_intro.json"
+        - type: "flag_set"
+          flag: "ready_for_confrontation"
+          value: true
+
+  # 시간 제한 경고 (추후 구현)
+  - id: "time_warning"
+    condition:
+      type: "time_elapsed"
+      minutes: 30
+    action:
+      type: "hint"
+      message: "시간이 얼마 남지 않았습니다. 핵심 증거에 집중하세요."
+
+  # 플레이어가 헤맬 때 힌트 제공
+  - id: "stuck_hint"
+    condition:
+      type: "no_progress"
+      minutes: 10
+    action:
+      type: "hint"
+      message: "서재의 서랍을 더 자세히 살펴보는 것이 어떨까요?"
+
+# 엔딩 분기 조건
+endings:
+  - id: "true_ending"
+    name: "진실 엔딩"
+    condition:
+      type: "all"
+      conditions:
+        - type: "clues_discovered"
+          clueIds: ["bloody_knife", "financial_records", "cctv_footage", "witness_testimony"]
+          operator: "all"
+        - type: "flag_check"
+          flag: "correct_culprit_identified"
+          value: true
+    story: "true_ending.json"
+    score: 100
+
+  - id: "partial_ending"
+    name: "부분 성공 엔딩"
+    condition:
+      type: "clues_discovered"
+      clueIds: ["bloody_knife", "financial_records"]
+      operator: "all"
+    story: "partial_ending.json"
+    score: 60
+
+  - id: "false_ending"
+    name: "실패 엔딩"
+    condition:
+      type: "default"
+    story: "false_ending.json"
+    score: 20
+
+# 힌트 시스템 설정
+hints:
+  enabled: true
+  cooldown: 300  # 힌트 사용 후 5분 대기
+  maxHints: 3    # 게임당 최대 3개 힌트
+
+  hintList:
+    - id: "hint_knife"
+      trigger: "knife_not_found_10min"
+      message: "피해자의 서재 서랍을 조사해보세요."
+
+    - id: "hint_financial"
+      trigger: "financial_not_found_15min"
+      message: "피해자의 재정 상태를 조사하면 단서를 찾을 수 있습니다."
+
+    - id: "hint_cctv"
+      trigger: "cctv_not_found_20min"
+      message: "아파트 관리실의 CCTV 기록을 확인해보세요."
+
+# 타임라인 이벤트 (특정 시점에 자동 발생)
+timelineEvents:
+  - time: "00:15:00"  # 게임 시작 후 15분
+    event:
+      type: "notification"
+      message: "경찰서에서 연락이 왔습니다. 피해자의 은행 기록을 입수했습니다."
+      unlockClue: "financial_records"
+
+  - time: "00:30:00"  # 게임 시작 후 30분
+    event:
+      type: "notification"
+      message: "시간이 얼마 남지 않았습니다. 서둘러야 합니다."
+
+# 디버그 모드 설정
+debug:
+  skipIntro: false          # 인트로 스토리 건너뛰기
+  unlockAllClues: false     # 모든 증거 처음부터 해금
+  disableTimers: false      # 타이머 비활성화

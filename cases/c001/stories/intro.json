@@ -1,0 +1,26 @@
+{
+  "id": "intro",
+  "title": "프롤로그: 사건의 시작",
+  "scenes": [
+    {
+      "image": "intro_scene01.svg",
+      "caption": "2024년 3월 15일 금요일, 서울 강남구 타워팰리스"
+    },
+    {
+      "image": "intro_scene02.svg",
+      "caption": "새벽 6시 30분, 경비원의 신고로 경찰이 출동했다."
+    },
+    {
+      "image": "intro_scene03.svg",
+      "caption": "피해자 김민수(45세, 남성)가 자택 서재에서 숨진 채 발견되었다."
+    },
+    {
+      "image": "intro_scene04.svg",
+      "caption": "사인은 예리한 흉기에 의한 자상. 발견 당시 이미 사망한 지 수 시간이 지난 상태였다."
+    },
+    {
+      "image": "intro_scene05.svg",
+      "caption": "당신은 이 사건을 담당하게 된 형사다. 진실을 밝혀내라."
+    }
+  ]
+}

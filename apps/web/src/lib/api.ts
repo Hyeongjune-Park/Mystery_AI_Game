@@ -10,6 +10,10 @@ export type NpcReplyLite = {
   reply: string;
   state?: { node?: string; flags?: string[] };
   choices?: { id: string; text: string }[]; // ✅ 드라마틱 선택지(조건부)
+  triggeredActions?: Array<{
+    type: string;
+    [key: string]: any;
+  }>; // ✅ Flow 트리거 액션들
 };
 
 export async function sendMessage(sessionId: string, dto: SendMessageDto) {
@@ -126,5 +130,57 @@ export async function fetchNpcsIntro(caseId: string): Promise<NpcsIntroData> {
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`fetchNpcsIntro failed: ${res.status}`);
+  return await res.json();
+}
+
+// ===== Story/Cutscene API =====
+
+export interface StoryScene {
+  image: string;
+  imageUrl: string;
+  caption: string;
+}
+
+export interface StoryResponse {
+  id: string;
+  title: string;
+  scenes: StoryScene[];
+}
+
+export interface FlowConfig {
+  gameStart: {
+    story: string;
+  };
+  phases: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+  triggers: any[];
+  endings: any[];
+  hints: any;
+  timelineEvents: any[];
+  debug: any;
+}
+
+/**
+ * 특정 케이스의 스토리 파일을 가져옵니다
+ */
+export async function fetchStoryFile(caseId: string, storyFileName: string): Promise<StoryResponse> {
+  const res = await fetch(`/api/proxy/story/${encodeURIComponent(caseId)}/${encodeURIComponent(storyFileName)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchStoryFile failed: ${res.status}`);
+  return await res.json();
+}
+
+/**
+ * 특정 케이스의 flow.yaml 설정을 가져옵니다
+ */
+export async function fetchFlowConfig(caseId: string): Promise<FlowConfig> {
+  const res = await fetch(`/api/proxy/story/${encodeURIComponent(caseId)}/flow`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`fetchFlowConfig failed: ${res.status}`);
   return await res.json();
 }

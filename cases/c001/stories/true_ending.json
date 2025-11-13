@@ -1,0 +1,18 @@
+{
+  "id": "true_ending",
+  "title": "엔딩: 진실",
+  "scenes": [
+    {
+      "image": "ending_true01.svg",
+      "caption": "당신은 모든 증거를 정확히 파악했다."
+    },
+    {
+      "image": "ending_true02.svg",
+      "caption": "범인은 결국 자백했고, 사건의 진실이 밝혀졌다."
+    },
+    {
+      "image": "ending_true03.svg",
+      "caption": "정의가 승리했다. 하지만 이 사건이 남긴 상처는 쉽게 치유되지 않을 것이다."
+    }
+  ]
+}

@@ -15,11 +15,19 @@ import { PrismaModule } from './prisma/prisma.module';
 // 케이스 데이터 라우트(/cases)
 import { CasesModule } from './cases/cases.module';
 
+// 스토리/컷신 라우트(/story)
+import { StoryModule } from './story/story.module';
+
+// 세션 관리 라우트(/sessions)
+import { SessionsModule } from './sessions/sessions.module';
+
 @Module({
   imports: [
     PrismaModule, // Prisma DI (현재는 미사용이지만 전역 제공)
+    SessionsModule, // ✅ /sessions 라우트 활성화
     MessagesModule, // ✅ /sessions/:id/message 라우트 활성화
     CasesModule, // ✅ /cases 라우트 활성화
+    StoryModule, // ✅ /story 라우트 활성화
   ],
   controllers: [
     AppController, // ✅ /health, /echo 활성화

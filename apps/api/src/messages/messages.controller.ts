@@ -22,8 +22,15 @@ import type { NpcReplyV1 } from '../ai/schema';
 import { INTENT_FALLBACK } from '../ai/schema';
 import { LRU, makeKey } from '../ai/cache';
 import { computeDramaticChoices } from '../ai/choices';
+import { FlowEvaluatorService } from '../flow/flow-evaluator.service';
+import { storyLoader } from '../cases/story.loader';
 
 const replyCache = new LRU<NpcReplyV1>(200);
+
+/** 응답 타입: NPC 답변 + 트리거된 액션들 */
+type MessageResponse = NpcReplyV1 & {
+  triggeredActions?: any[];
+};
 const API_VERSION = '2025-08-30' as const;
 const SCHEMA_VERSION = 'npc_reply@1' as const;
 
@@ -106,13 +113,16 @@ function makeFallback(params: {
 export class MessagesController {
   private readonly logger = new Logger(MessagesController.name);
 
-  constructor(private readonly sessions: SessionsService) {}
+  constructor(
+    private readonly sessions: SessionsService,
+    private readonly flowEvaluator: FlowEvaluatorService,
+  ) {}
 
   @Post('/sessions/:id/message')
   async handle(
     @Param('id') sessionId: string,
     @Body() body: unknown,
-  ): Promise<NpcReplyV1> {
+  ): Promise<MessageResponse> {
     // 0) DTO 검증
     if (!isMessageDto(body)) {
       this.logger.warn(`Bad request body: ${toLogMessage(body)}`);
@@ -167,7 +177,37 @@ export class MessagesController {
       await Promise.resolve(
         this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
       ).catch(() => void 0);
-      return fb;
+
+      // ✅ Flow 트리거 평가 (buildContext 실패 시에도 실행)
+      let triggeredActions: any[] = [];
+      try {
+        const flowConfig = storyLoader.loadFlowConfig(dto.caseId);
+        const gameState = await this.flowEvaluator.loadGameState(sessionId);
+        const actions = await this.flowEvaluator.evaluateTriggers(
+          flowConfig,
+          gameState,
+        );
+
+        for (const action of actions) {
+          const result = await this.flowEvaluator.executeAction(
+            action,
+            sessionId,
+          );
+          if (result) {
+            triggeredActions.push(result);
+          }
+        }
+
+        if (triggeredActions.length > 0) {
+          this.logger.log(
+            `Triggered ${triggeredActions.length} actions for session ${sessionId}`,
+          );
+        }
+      } catch (flowError) {
+        this.logger.warn(`Flow evaluation failed: ${toLogMessage(flowError)}`);
+      }
+
+      return { ...fb, triggeredActions };
     }
 
     // 3) 캐시
@@ -240,7 +280,39 @@ export class MessagesController {
       }
 
       replyCache.set(cacheKey, replyObj);
-      return replyObj;
+
+      // ✅ Flow 트리거 평가
+      let triggeredActions: any[] = [];
+      try {
+        const flowConfig = storyLoader.loadFlowConfig(dto.caseId);
+        const gameState = await this.flowEvaluator.loadGameState(sessionId);
+        const actions = await this.flowEvaluator.evaluateTriggers(
+          flowConfig,
+          gameState,
+        );
+
+        // 액션 실행 및 결과 수집
+        for (const action of actions) {
+          const result = await this.flowEvaluator.executeAction(
+            action,
+            sessionId,
+          );
+          if (result) {
+            triggeredActions.push(result);
+          }
+        }
+
+        if (triggeredActions.length > 0) {
+          this.logger.log(
+            `Triggered ${triggeredActions.length} actions for session ${sessionId}`,
+          );
+        }
+      } catch (flowError) {
+        this.logger.warn(`Flow evaluation failed: ${toLogMessage(flowError)}`);
+        // Flow 에러는 무시하고 계속 진행
+      }
+
+      return { ...replyObj, triggeredActions };
     } catch (e) {
       this.logger.error(`LLM/validate failed: ${toLogMessage(e)}`);
       const fb = makeFallback({
@@ -259,7 +331,37 @@ export class MessagesController {
       await Promise.resolve(
         this.sessions.append(sessionId, { from: 'npc', text: fb.reply }, fb),
       ).catch(() => void 0);
-      return fb;
+
+      // ✅ Flow 트리거 평가 (fallback path에서도 실행)
+      let triggeredActions: any[] = [];
+      try {
+        const flowConfig = storyLoader.loadFlowConfig(dto.caseId);
+        const gameState = await this.flowEvaluator.loadGameState(sessionId);
+        const actions = await this.flowEvaluator.evaluateTriggers(
+          flowConfig,
+          gameState,
+        );
+
+        for (const action of actions) {
+          const result = await this.flowEvaluator.executeAction(
+            action,
+            sessionId,
+          );
+          if (result) {
+            triggeredActions.push(result);
+          }
+        }
+
+        if (triggeredActions.length > 0) {
+          this.logger.log(
+            `Triggered ${triggeredActions.length} actions for session ${sessionId}`,
+          );
+        }
+      } catch (flowError) {
+        this.logger.warn(`Flow evaluation failed: ${toLogMessage(flowError)}`);
+      }
+
+      return { ...fb, triggeredActions };
     }
   }
 

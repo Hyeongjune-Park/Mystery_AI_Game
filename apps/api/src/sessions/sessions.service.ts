@@ -173,6 +173,42 @@ export class SessionsService {
   }
 
   /**
+   * 증거 추가 (discoveredClues 배열에 추가)
+   */
+  async addClue(id: string, clueId: string): Promise<void> {
+    await this.ensureSession(id);
+
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    const raw = session?.flags as unknown;
+    const fj: FlagsJson = isFlagsJson(raw) ? raw : {};
+
+    // discoveredClues 배열 가져오기
+    const discoveredClues = Array.isArray((fj as any).discoveredClues)
+      ? (fj as any).discoveredClues
+      : [];
+
+    // 중복 방지
+    if (!discoveredClues.includes(clueId)) {
+      discoveredClues.push(clueId);
+    }
+
+    // flags 업데이트
+    const updatedFlags = {
+      ...fj,
+      discoveredClues,
+    };
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { flags: updatedFlags as unknown as Prisma.InputJsonValue },
+    });
+  }
+
+  /**
    * 내부 유틸: 세션이 없으면 생성(중복에도 안전)
    */
   private async ensureSession(

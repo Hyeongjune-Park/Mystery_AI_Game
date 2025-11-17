@@ -27,6 +27,11 @@ export default function GameMain({ caseId }: GameMainProps) {
   const [npcSessions, setNpcSessions] = useState<Record<string, string>>({});
   const [npcMessages, setNpcMessages] = useState<Record<string, Message[]>>({});
 
+  // 미확인 메시지 상태 (임시: 테스트용 더미 데이터)
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({
+    "npc.detective.doil": 1, // 테스트용
+  });
+
   const tabs = [
     {
       id: "npcs" as TabType,
@@ -125,7 +130,7 @@ export default function GameMain({ caseId }: GameMainProps) {
       {/* Tab Content */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          {activeTab === "npcs" && <NpcsTab caseId={caseId} />}
+          {activeTab === "npcs" && <NpcsTab caseId={caseId} unreadMessages={unreadMessages} />}
 
           {activeTab === "locations" && <LocationsTab caseId={caseId} />}
 

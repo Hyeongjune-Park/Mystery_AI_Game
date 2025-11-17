@@ -32,6 +32,12 @@ export interface NpcReplyV1 {
     label: string;
     hint?: string;
   }>;
+  investigation_request?: {
+    type: 'forensic' | 'cctv' | 'database' | 'interview';
+    clue_to_reveal: string;
+    description: string;
+    duration_turns: number;
+  };
 }
 
 /** AJV 검증용 JSON 스키마 (defaults 포함) */
@@ -79,6 +85,20 @@ export const NpcReplyJsonSchema = {
         },
         required: ['id', 'label'],
       },
+    },
+    investigation_request: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['forensic', 'cctv', 'database', 'interview'],
+        },
+        clue_to_reveal: { type: 'string' },
+        description: { type: 'string' },
+        duration_turns: { type: 'number', minimum: 1, maximum: 10 },
+      },
+      required: ['type', 'clue_to_reveal', 'description', 'duration_turns'],
     },
   },
   required: [

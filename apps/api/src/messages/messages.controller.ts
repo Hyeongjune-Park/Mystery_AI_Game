@@ -147,6 +147,45 @@ export class MessagesController {
       this.logger.warn(`append(player) failed: ${toLogMessage(e)}`),
     );
 
+    // 1-1) 턴 증가
+    const currentTurn = await this.sessions.incrementTurn(sessionId);
+    this.logger.log(`Turn ${currentTurn} for session ${sessionId}`);
+
+    // 1-2) 완료된 조사 체크 및 시스템 메시지 생성
+    const completedInvestigations = await this.sessions.getCompletedInvestigations(sessionId);
+    for (const investigation of completedInvestigations) {
+      // 시스템 메시지 생성
+      await this.sessions.append(
+        sessionId,
+        {
+          from: 'system',
+          text: investigation.notificationMessage,
+        },
+        {
+          type: 'investigation_complete',
+          requestId: investigation.id,
+          clueRevealed: investigation.clueToReveal,
+        },
+      );
+
+      // 조사 상태 업데이트
+      await this.sessions.updateInvestigationStatus(
+        sessionId,
+        investigation.id,
+        'ready',
+      );
+
+      // 미확인 메시지 카운트 증가
+      await this.sessions.incrementUnreadMessages(sessionId, investigation.npcId);
+
+      // 단서 공개
+      await this.sessions.addClue(sessionId, investigation.clueToReveal);
+
+      this.logger.log(
+        `Investigation ${investigation.id} completed: ${investigation.clueToReveal}`,
+      );
+    }
+
     // 2) 컨텍스트
     let nodeForFallback = session.state?.node ?? 'start';
     let flagsForFallback = session.state?.flags ?? [];
@@ -279,6 +318,27 @@ export class MessagesController {
         ).catch(() => void 0);
       }
 
+      // 조사 의뢰 처리
+      if (base.investigation_request) {
+        const req = base.investigation_request;
+
+        const investigationRequest = {
+          id: randomUUID(),
+          type: req.type,
+          requestedAt: currentTurn,
+          completesAt: currentTurn + req.duration_turns,
+          clueToReveal: req.clue_to_reveal,
+          npcId: dto.npcId,
+          status: 'pending' as const,
+          notificationMessage: `${req.description} 결과가 나왔습니다.`,
+        };
+
+        await this.sessions.addInvestigationRequest(sessionId, investigationRequest);
+        this.logger.log(
+          `Investigation request created: ${investigationRequest.id} (${req.type}, completes at turn ${investigationRequest.completesAt})`,
+        );
+      }
+
       replyCache.set(cacheKey, replyObj);
 
       // ✅ Flow 트리거 평가
@@ -372,7 +432,7 @@ export class MessagesController {
     @Query('limit') limit?: string,
   ): Promise<{
     sessionId: string;
-    items: Array<{ at: string; from: 'player' | 'npc'; text: string }>;
+    items: Array<{ at: string; from: 'player' | 'npc' | 'system'; text: string }>;
   }> {
     const n = Math.min(Math.max(Number(limit ?? '50'), 1), 200);
     const items = await this.sessions.listTimeline(sessionId, n);

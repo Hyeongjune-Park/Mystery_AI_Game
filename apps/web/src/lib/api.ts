@@ -27,7 +27,18 @@ export async function sendMessage(sessionId: string, dto: SendMessageDto) {
   return (await res.json()) as NpcReplyLite;
 }
 
-export async function fetchTimeline(sessionId: string, limit = 100) {
+export type TimelineItem = {
+  at: string;
+  from: 'player' | 'npc' | 'system';
+  text: string;
+};
+
+export type TimelineResponse = {
+  sessionId: string;
+  items: TimelineItem[];
+};
+
+export async function fetchTimeline(sessionId: string, limit = 100): Promise<TimelineResponse> {
   const res = await fetch(`/api/proxy/sessions/${encodeURIComponent(sessionId)}/timeline?limit=${limit}`, {
     method: "GET",
     cache: "no-store",

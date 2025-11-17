@@ -9,7 +9,7 @@ import * as path from 'path';
 
 type SessionLike = {
   state?: { node?: string; flags?: string[] };
-  logs?: Array<{ from: 'player' | 'npc'; text: string }>;
+  logs?: Array<{ from: 'player' | 'npc' | 'system'; text: string }>;
 };
 
 export type BuiltContext = {
@@ -73,7 +73,13 @@ export function buildContext({
   const defaultNode = 'initial';
   const node = session.state?.node ?? defaultNode;
   const flags = session.state?.flags ?? [];
-  const lastTurns = (session.logs ?? []).slice(-6);
+
+  // 시스템 메시지는 제외하고 player/npc 메시지만 LLM에 전달
+  const lastTurns = (session.logs ?? [])
+    .filter((log): log is { from: 'player' | 'npc'; text: string } =>
+      log.from === 'player' || log.from === 'npc'
+    )
+    .slice(-6);
 
   return {
     caseId,

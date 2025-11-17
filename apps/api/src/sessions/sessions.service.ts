@@ -6,8 +6,9 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import type { SessionFlags, InvestigationRequest } from '../types/investigation.types';
 
-type LogFrom = 'player' | 'npc';
+type LogFrom = 'player' | 'npc' | 'system';
 type Log = { from: LogFrom; text: string };
 
 type SessionLike = {
@@ -93,7 +94,11 @@ export class SessionsService {
     // 4) Log으로 변환 (from의 리터럴 유니온을 유지하도록 캐스팅)
     const logs: Log[] = messages
       .map((m) => {
-        const from = (m.role === 'player' ? 'player' : 'npc') as LogFrom; // 🔒 literal 좁히기
+        let from: LogFrom;
+        if (m.role === 'player') from = 'player';
+        else if (m.role === 'system') from = 'system';
+        else from = 'npc';
+
         const text =
           typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
         return { from, text };
@@ -164,11 +169,18 @@ export class SessionsService {
       select: { createdAt: true, role: true, content: true },
     });
     return rows
-      .map((r) => ({
-        at: r.createdAt,
-        from: (r.role === 'player' ? 'player' : 'npc') as Log['from'],
-        text: r.content,
-      }))
+      .map((r) => {
+        let from: LogFrom;
+        if (r.role === 'player') from = 'player';
+        else if (r.role === 'system') from = 'system';
+        else from = 'npc';
+
+        return {
+          at: r.createdAt,
+          from,
+          text: r.content,
+        };
+      })
       .reverse();
   }
 
@@ -200,6 +212,178 @@ export class SessionsService {
     const updatedFlags = {
       ...fj,
       discoveredClues,
+    };
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { flags: updatedFlags as unknown as Prisma.InputJsonValue },
+    });
+  }
+
+  /**
+   * 턴 수 증가
+   */
+  async incrementTurn(id: string): Promise<number> {
+    await this.ensureSession(id);
+
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    const raw = session?.flags as unknown;
+    const flags: SessionFlags = isFlagsJson(raw) ? (raw as SessionFlags) : {};
+
+    const turnCount = (flags.turnCount ?? 0) + 1;
+
+    const updatedFlags: SessionFlags = {
+      ...flags,
+      turnCount,
+    };
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { flags: updatedFlags as unknown as Prisma.InputJsonValue },
+    });
+
+    return turnCount;
+  }
+
+  /**
+   * 조사 요청 추가
+   */
+  async addInvestigationRequest(
+    id: string,
+    request: InvestigationRequest,
+  ): Promise<void> {
+    await this.ensureSession(id);
+
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    const raw = session?.flags as unknown;
+    const flags: SessionFlags = isFlagsJson(raw) ? (raw as SessionFlags) : {};
+
+    const requests = flags.investigationRequests ?? [];
+    requests.push(request);
+
+    const updatedFlags: SessionFlags = {
+      ...flags,
+      investigationRequests: requests,
+    };
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { flags: updatedFlags as unknown as Prisma.InputJsonValue },
+    });
+  }
+
+  /**
+   * 완료된 조사 요청 조회
+   */
+  async getCompletedInvestigations(id: string): Promise<InvestigationRequest[]> {
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    if (!session) return [];
+
+    const raw = session.flags as unknown;
+    const flags: SessionFlags = isFlagsJson(raw) ? (raw as SessionFlags) : {};
+
+    const turnCount = flags.turnCount ?? 0;
+    const requests = flags.investigationRequests ?? [];
+
+    return requests.filter(
+      (req) => req.status === 'pending' && req.completesAt <= turnCount,
+    );
+  }
+
+  /**
+   * 조사 요청 상태 업데이트
+   */
+  async updateInvestigationStatus(
+    id: string,
+    requestId: string,
+    status: 'ready' | 'claimed',
+  ): Promise<void> {
+    await this.ensureSession(id);
+
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    const raw = session?.flags as unknown;
+    const flags: SessionFlags = isFlagsJson(raw) ? (raw as SessionFlags) : {};
+
+    const requests = flags.investigationRequests ?? [];
+    const updatedRequests = requests.map((req) =>
+      req.id === requestId ? { ...req, status } : req,
+    );
+
+    const updatedFlags: SessionFlags = {
+      ...flags,
+      investigationRequests: updatedRequests,
+    };
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { flags: updatedFlags as unknown as Prisma.InputJsonValue },
+    });
+  }
+
+  /**
+   * 미확인 메시지 카운트 증가
+   */
+  async incrementUnreadMessages(id: string, npcId: string): Promise<void> {
+    await this.ensureSession(id);
+
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    const raw = session?.flags as unknown;
+    const flags: SessionFlags = isFlagsJson(raw) ? (raw as SessionFlags) : {};
+
+    const unreadMessages = flags.unreadMessages ?? {};
+    unreadMessages[npcId] = (unreadMessages[npcId] ?? 0) + 1;
+
+    const updatedFlags: SessionFlags = {
+      ...flags,
+      unreadMessages,
+    };
+
+    await this.prisma.session.update({
+      where: { id },
+      data: { flags: updatedFlags as unknown as Prisma.InputJsonValue },
+    });
+  }
+
+  /**
+   * 미확인 메시지 카운트 리셋
+   */
+  async resetUnreadMessages(id: string, npcId: string): Promise<void> {
+    await this.ensureSession(id);
+
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      select: { flags: true },
+    });
+
+    const raw = session?.flags as unknown;
+    const flags: SessionFlags = isFlagsJson(raw) ? (raw as SessionFlags) : {};
+
+    const unreadMessages = flags.unreadMessages ?? {};
+    unreadMessages[npcId] = 0;
+
+    const updatedFlags: SessionFlags = {
+      ...flags,
+      unreadMessages,
     };
 
     await this.prisma.session.update({

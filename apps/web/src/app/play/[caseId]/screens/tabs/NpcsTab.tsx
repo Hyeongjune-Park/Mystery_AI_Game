@@ -15,9 +15,10 @@ interface NpcData {
 
 interface NpcsTabProps {
   caseId: string;
+  unreadMessages?: Record<string, number>;
 }
 
-export default function NpcsTab({ caseId }: NpcsTabProps) {
+export default function NpcsTab({ caseId, unreadMessages = {} }: NpcsTabProps) {
   const [selectedNpc, setSelectedNpc] = useState<NpcData | null>(null);
 
   // NPC 데이터 (나중에 API에서 가져올 예정)
@@ -82,11 +83,19 @@ export default function NpcsTab({ caseId }: NpcsTabProps) {
             >
               {/* Card Header */}
               <div className="flex items-center gap-4 mb-3">
-                {/* Avatar */}
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center border-2 border-slate-600 group-hover:border-amber-500/30 transition-colors flex-shrink-0">
-                  <svg className="w-7 h-7 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
+                {/* Avatar with Badge */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center border-2 border-slate-600 group-hover:border-amber-500/30 transition-colors">
+                    <svg className="w-7 h-7 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  {/* Unread Badge */}
+                  {unreadMessages[npc.id] && unreadMessages[npc.id] > 0 && (
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-slate-900 shadow-lg animate-pulse">
+                      <span className="text-xs font-bold text-white">{unreadMessages[npc.id]}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Name & Role */}

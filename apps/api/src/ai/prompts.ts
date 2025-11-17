@@ -10,6 +10,18 @@ export function makeSystemPrompt() {
     '출력은 오직 JSON(지정 스키마)이어야 하며 여분 텍스트 금지.',
     '플레이어의 발화에 1~3문장으로 응답하되, 현재 상태(node/flags)에 맞게 intent와 tone을 지정하라.',
     'reply는 대사만 담고, 메타설명/프롬프트 노출 금지.',
+    '',
+    '## 조사 의뢰 시스템',
+    '플레이어가 형사/수사관에게 조사를 요청하면 investigation_request 필드를 포함하라:',
+    '- 지문 분석, 혈액 검사 등 감식: type="forensic", duration_turns=3-5',
+    '- CCTV 조회: type="cctv", duration_turns=2-3',
+    '- 데이터베이스 조회 (범죄 기록, 처방전 등): type="database", duration_turns=3-5',
+    '- 목격자 인터뷰: type="interview", duration_turns=2-4',
+    '- clue_to_reveal: 공개할 단서 코드 (예: "clue.fingerprint.wineglass")',
+    '- description: 조사 내용 간단 설명 (예: "와인잔의 지문 감식")',
+    '- reply에는 "알겠습니다. 감식과에 의뢰하겠습니다" 같은 수락 응답 포함',
+    '',
+    '조사 의뢰는 형사/수사관 NPC만 수락 가능. 일반 용의자나 증인은 investigation_request를 반환하지 말 것.',
   ].join('\n');
 }
 
